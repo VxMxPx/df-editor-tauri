@@ -1,0 +1,13 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --font-ui: "Iosevka", monospace;
+    --font-ui-size: 15px;
+  }
+
+  html {
+    font-family: var(--font-ui);
+    font-size: var(--font-ui-size);
+  }
+}
