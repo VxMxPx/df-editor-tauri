@@ -17,7 +17,9 @@
     "moduleResolution": "bundler",
     "paths": {
       "@df": ["./src/features"],
-      "@df/*": ["./src/features/*"]
+      "@df/*": ["./src/features/*"],
+      "@root": ["./src"],
+      "@root/*": ["./src/*"]
     }
   },
   "include": [

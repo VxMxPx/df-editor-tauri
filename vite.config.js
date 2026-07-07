@@ -23,6 +23,7 @@ export default defineConfig(async () => ({
   resolve: {
     alias: {
       "@df": new URL("./src/features", import.meta.url).pathname,
+      "@root": new URL("./src", import.meta.url).pathname,
     },
   },
 
