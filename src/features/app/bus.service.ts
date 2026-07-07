@@ -10,8 +10,16 @@ type event_value<K extends event_name> = BusEvents[K] extends void
   ? number
   : BusEvents[K]
 
-const listeners = new Map<string, Set<listener>>()
-const values = new Map<string, unknown>()
+const state: {
+  listeners: Map<string, Set<listener>>
+  values: Map<string, unknown>
+} = import.meta.hot?.data.state ?? {
+  listeners: new Map<string, Set<listener>>(),
+  values: new Map<string, unknown>(),
+}
+if (import.meta.hot) import.meta.hot.data.state = state
+
+const { listeners, values } = state
 
 function signal<K extends event_name>(
   event: K,

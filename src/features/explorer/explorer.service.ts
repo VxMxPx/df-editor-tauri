@@ -21,7 +21,6 @@ export type ExplorerState = {
 let nodes: ExplorerNode[] = []
 const expanded = new Set<string>()
 const STORAGE_ID = "df/explorer:expanded"
-let root = ""
 
 //
 // push expanded directories to SS and trigger signal
@@ -60,9 +59,8 @@ async function read_nodes(path: string, level: number) {
 // initial (re)load of nodes
 //
 export async function load(path: string) {
-  root = path
   expanded.clear()
-  nodes = path ? await read_nodes(path, 0) : []
+  nodes.splice(0, nodes.length, ...(path ? await read_nodes(path, 0) : []))
   if (path) {
     const saved: string[] = JSON.parse(
       sessionStorage.getItem(STORAGE_ID) || "[]",
