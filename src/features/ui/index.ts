@@ -1,2 +1,5 @@
 export { default as Panel } from "./panel.ui.svelte"
 export { default as Statusbar } from "./statusbar.ui.svelte"
+export { default as Icon } from "./icon.ui.svelte"
+export { default as Button } from "./button.ui.svelte"
+export { default as Titlebar } from "./titlebar.ui.svelte"

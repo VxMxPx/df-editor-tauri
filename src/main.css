@@ -10,4 +10,19 @@
     font-family: var(--font-ui);
     font-size: var(--font-ui-size);
   }
+
+  * {
+    box-sizing: border-box;
+  }
+
+  html,
+  body {
+    overflow: hidden;
+  }
+
+  button {
+    display: inline-flex;
+    justify-content: center;
+    cursor: pointer;
+  }
 }

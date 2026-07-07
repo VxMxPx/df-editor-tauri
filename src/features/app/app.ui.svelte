@@ -1,27 +1,49 @@
 <script>
   import { EditorUi } from "@df/editor"
-  import { Panel, Statusbar } from "@df/ui"
+  import { Icon, Panel, Statusbar } from "@df/ui"
   import { bus } from "@df/app"
   import { vault, VaultSelectUi } from "@df/vault"
   import { ExplorerUi } from "@df/explorer"
+  import Titlebar from "@df/ui/titlebar.ui.svelte"
 
   const has_vault = bus.bind("vault::is_opened")
   const app_init_done = bus.bind("app::init_done")
+
+  let primary_panel = $state(true)
+  let secondary_panel = $state(false)
 
   const is_ready = $derived(has_vault.current && Boolean(app_init_done.current))
 </script>
 
 <main class="app app_ui">
   {#if is_ready}
-    <div class="flex flex-row grow">
-      <Panel>
-        <ExplorerUi />
-        <button onclick={vault.close}>Close Vault</button>
-      </Panel>
+    <!-- MAIN STATE -->
+    <div class="top-layout">
+      {#if primary_panel}
+        <Panel>
+          <Titlebar title="Hi" transparent></Titlebar>
+          <ExplorerUi />
+        </Panel>
+      {/if}
       <EditorUi />
+      {#if secondary_panel}
+        <Panel>Secondary panel...</Panel>
+      {/if}
     </div>
-    <Statusbar />
+    <Statusbar>
+      <button onclick={() => (primary_panel = !primary_panel)}>
+        <Icon name="SidebarLeft" />
+      </button>
+      <button onclick={vault.close}>
+        <Icon name="FolderClosed" />
+      </button>
+      <span class="grow"></span>
+      <button onclick={() => (secondary_panel = !secondary_panel)}>
+        <Icon name="SidebarRight" />
+      </button>
+    </Statusbar>
   {:else}
+    <!-- LOADING/VAULT STATE -->
     {#if has_vault.current === false}
       <VaultSelectUi />
     {:else}
@@ -41,5 +63,8 @@
         rgba(255, 255, 255, 0.2) 100%
       ),
       #170e08;
+    .top-layout {
+      @apply flex min-h-0 grow flex-row gap-2;
+    }
   }
 </style>
