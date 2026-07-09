@@ -21,7 +21,7 @@
     <div class="top-layout">
       {#if primary_panel}
         <Panel>
-          <Titlebar title="Hi" transparent></Titlebar>
+          <Titlebar title="Projects" transparent></Titlebar>
           <ExplorerUi />
         </Panel>
       {/if}

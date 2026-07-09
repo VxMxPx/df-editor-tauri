@@ -3,6 +3,9 @@ import { bus, fs } from "@df/app"
 //
 // types
 //
+export type OpenedNode = ExplorerNode & {
+  contents: string
+}
 export type ExplorerNode = {
   id: string
   name: string
@@ -12,13 +15,17 @@ export type ExplorerNode = {
 }
 export type ExplorerState = {
   nodes: ExplorerNode[]
-  expanded: string[]
+  focused: string
+  opened: OpenedNode[]
+  expanded: Set<string>
 }
 
 //
 // state
 //
 let nodes: ExplorerNode[] = []
+let focused: string = ""
+let opened: OpenedNode[] = []
 const expanded = new Set<string>()
 const STORAGE_ID = "df/explorer:expanded"
 
@@ -27,7 +34,46 @@ const STORAGE_ID = "df/explorer:expanded"
 //
 const push_state = () => {
   sessionStorage.setItem(STORAGE_ID, JSON.stringify([...expanded]))
-  bus.signal("explorer::state", nodes)
+  bus.signal("explorer::state", { nodes, focused, opened, expanded })
+}
+
+//
+// open a file / read file's contents
+//
+export async function open(id: string) {
+  const node = nodes.find((node) => node.id === id)
+  if (!node || node.type !== "file") return
+
+  if (!opened.some((node) => node.id === id)) {
+    opened.push({ ...node, contents: await fs.read_text(node.path) })
+  }
+
+  focused = id
+  push_state()
+}
+
+//
+// close opened file
+//
+export function close(id = focused) {
+  const index = opened.findIndex((node) => node.id === id)
+  if (index === -1) return
+
+  opened.splice(index, 1)
+  if (focused === id) focused = opened.at(index - 1)?.id ?? opened[0]?.id ?? ""
+  push_state()
+}
+
+//
+// save file by id / write file's content (must be open)
+//
+export async function save(id = focused, contents?: string) {
+  const node = opened.find((node) => node.id === id)
+  if (!node) return
+
+  node.contents = contents ?? node.contents
+  await fs.write_text(node.path, node.contents)
+  push_state()
 }
 
 //
@@ -60,6 +106,8 @@ async function read_nodes(path: string, level: number) {
 //
 export async function load(path: string) {
   expanded.clear()
+  focused = ""
+  opened.splice(0, opened.length)
   nodes.splice(0, nodes.length, ...(path ? await read_nodes(path, 0) : []))
   if (path) {
     const saved: string[] = JSON.parse(
@@ -67,6 +115,14 @@ export async function load(path: string) {
     )
     for (const id of saved.sort()) await expand(id)
   }
+  push_state()
+}
+
+//
+// set focused file state
+//
+export function focus(id: string) {
+  focused = id
   push_state()
 }
 
