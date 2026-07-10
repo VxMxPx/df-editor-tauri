@@ -15,7 +15,8 @@ Structure is:
 CALL_ID=[KEY,KEY,KEY]
 
 - For now we have one scope called 'ALL'.
-- Resolve keys, and set global document watcher
+- Resolve `CMD` to the macOS `metaKey`, and compare other keys case-insensitively.
+- Set a global document watcher and call `preventDefault()` only for a matched shortcut.
 - Create map { ACTION: function }
 - For now keymap service hard-code resolve actions i.e. SAVE => explorer.save
 
