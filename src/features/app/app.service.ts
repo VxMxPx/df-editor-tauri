@@ -3,7 +3,7 @@ import AppUI from "./app.ui.svelte"
 import { editor } from "@df/editor"
 import { explorer } from "@df/explorer"
 import { vault } from "@df/vault"
-import { bus, log } from "."
+import { bus, log, settings } from "."
 
 let is_init_done = false
 
@@ -34,6 +34,7 @@ export async function init() {
     //
     // initialize other services
     //
+    //
     await editor.init()
 
     is_init_done = true
@@ -44,6 +45,7 @@ export async function init() {
   // initialize vault
   // stop execution of further services if vault is not opened
   //
+  settings.init()
   explorer.init()
   const has_vault = await vault.init()
 }
