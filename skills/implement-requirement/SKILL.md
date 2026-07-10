@@ -13,4 +13,4 @@ description: Review, clarify, and implement a numbered repository requirement. U
 4. Once aligned, edit the requirement to make the agreed behavior and acceptance criteria clear.
 5. Implement only the clarified requirement. Keep the change small and within scope.
 6. Run the verification required by the repository instructions. Report unrelated existing failures separately.
-7. Summarize the result and offer to create logical commits. Do not commit or move the requirement to `requirements/done/` unless asked.
+7. Summarize the result and offer to create logical commits. When asked to commit a completed requirement, move it to `requirements/done/` in that commit.
