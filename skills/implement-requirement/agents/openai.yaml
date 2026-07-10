@@ -1,0 +1,4 @@
+interface:
+  display_name: "Implement Requirement"
+  short_description: "Review and implement a repository requirement"
+  default_prompt: "Use $implement-requirement to implement requirement 001."

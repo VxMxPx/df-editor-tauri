@@ -24,3 +24,10 @@ Tauri 2 desktop app with a Svelte 5, TypeScript, Vite, Tailwind CSS 4, and Monac
 - Keep shared design values as CSS variables in `src/main.css`.
 - Follow Prettier: two spaces and no semicolons.
 - Before handing off changes, run `pnpm check`, `pnpm format:check`, and `pnpm build`.
+
+## Requirements
+
+- Feature requirements live in `requirements/`.
+- For a request such as `implement 001`, follow `skills/implement-requirement/SKILL.md`.
+- Before implementing a requirement, review it, ask about unclear decisions, and update it for clarity once aligned.
+- Only then implement it. When complete, offer to create logical commits.
