@@ -1,6 +1,18 @@
-# DarkForestEditor
+<p align="center">
+  <img src="icon-mac.svg" width="96" alt="DarkForest Editor icon" />
+</p>
 
-A desktop application built with Tauri 2, Svelte 5, TypeScript, and Vite.
+<h1 align="center">DarkForest Editor</h1>
+
+<p align="center">
+  A calm, local-first workspace for notes, files, and AI-assisted writing.
+</p>
+
+<p align="center">
+  <img src="df-ai-editor.png" alt="DarkForest Editor interface" width="900" />
+</p>
+
+DarkForest Editor is a macOS-first desktop app built with Tauri, Svelte, and Monaco. It keeps a vault of local files within reach while leaving room for an AI companion alongside your work.
 
 ## Development
 
@@ -9,8 +21,4 @@ pnpm install
 pnpm tauri dev
 ```
 
-Use `pnpm check` to run Svelte and TypeScript diagnostics, and `pnpm build` to build the frontend.
-
-## Recommended IDE Setup
-
-[VS Code](https://code.visualstudio.com/) + [Svelte](https://marketplace.visualstudio.com/items?itemName=svelte.svelte-vscode) + [Tauri](https://marketplace.visualstudio.com/items?itemName=tauri-apps.tauri-vscode) + [rust-analyzer](https://marketplace.visualstudio.com/items?itemName=rust-lang.rust-analyzer).
+Use `pnpm check` for Svelte and TypeScript diagnostics, and `pnpm build` for a production frontend build.
