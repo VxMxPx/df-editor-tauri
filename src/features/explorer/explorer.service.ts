@@ -1,22 +1,22 @@
-import { bus, fs } from "@df/app"
+import { bus, fs, settings } from "@df/app"
 
 //
 // types
 //
-export type OpenedNode = ExplorerNode & {
-  contents: string
-}
 export type ExplorerNode = {
   id: string
   name: string
   type: "dir" | "file"
   path: string
   level: number
+  opened: number | null
+  is_dirty: boolean
+  contents: string
+  buffer: string
 }
 export type ExplorerState = {
   nodes: ExplorerNode[]
   focused: string
-  opened: OpenedNode[]
   expanded: Set<string>
 }
 
@@ -25,7 +25,7 @@ export type ExplorerState = {
 //
 let nodes: ExplorerNode[] = []
 let focused: string = ""
-let opened: OpenedNode[] = []
+let opened = 0
 const expanded = new Set<string>()
 const STORAGE_ID = "df/explorer:expanded"
 
@@ -34,7 +34,7 @@ const STORAGE_ID = "df/explorer:expanded"
 //
 const push_state = () => {
   sessionStorage.setItem(STORAGE_ID, JSON.stringify([...expanded]))
-  bus.signal("explorer::state", { nodes, focused, opened, expanded })
+  bus.signal("explorer::state", { nodes, focused, expanded })
 }
 
 //
@@ -44,8 +44,18 @@ export async function open(id: string) {
   const node = nodes.find((node) => node.id === id)
   if (!node || node.type !== "file") return
 
-  if (!opened.some((node) => node.id === id)) {
-    opened.push({ ...node, contents: await fs.read_text(node.path) })
+  if (node.opened === null) {
+    const contents = await fs.read_text(node.path)
+    nodes = nodes.map((node) =>
+      node.id === id
+        ? {
+            ...node,
+            opened: ++opened,
+            contents,
+            buffer: contents,
+          }
+        : node,
+    )
   }
 
   focused = id
@@ -53,26 +63,63 @@ export async function open(id: string) {
 }
 
 //
+// update file buffer and dirty state
+//
+export function set_buffer(id: string, buffer: string) {
+  const node = nodes.find((node) => node.id === id)
+  if (!node) return
+  if (node.buffer === buffer) return
+
+  nodes = nodes.map((node) =>
+    node.id === id
+      ? { ...node, buffer, is_dirty: buffer !== node.contents }
+      : node,
+  )
+  push_state()
+}
+
+//
 // close opened file
 //
 export function close(id = focused) {
-  const index = opened.findIndex((node) => node.id === id)
-  if (index === -1) return
+  const node = nodes.find((node) => node.id === id)
+  if (!node || node.opened === null) return
 
-  opened.splice(index, 1)
-  if (focused === id) focused = opened.at(index - 1)?.id ?? opened[0]?.id ?? ""
+  const previous = nodes
+    .filter((item) => item.opened !== null && item.opened < node.opened!)
+    .sort((a, b) => b.opened! - a.opened!)[0]
+
+  nodes = nodes.map((node) =>
+    node.id === id
+      ? {
+          ...node,
+          opened: null,
+          is_dirty: false,
+          contents: "",
+          buffer: "",
+        }
+      : node,
+  )
+  if (focused === id) focused = previous?.id ?? ""
   push_state()
 }
 
 //
 // save file by id / write file's content (must be open)
 //
-export async function save(id = focused, contents?: string) {
-  const node = opened.find((node) => node.id === id)
-  if (!node) return
+export async function save(id = focused, buffer?: string) {
+  const node = nodes.find((node) => node.id === id)
+  if (!node || node.opened === null) return
 
-  node.contents = contents ?? node.contents
-  await fs.write_text(node.path, node.contents)
+  const next_contents = buffer ?? node.buffer
+  const next = {
+    ...node,
+    contents: next_contents,
+    buffer: next_contents,
+    is_dirty: false,
+  }
+  nodes = nodes.map((node) => (node.id === id ? next : node))
+  await fs.write_text(next.path, next.contents)
   push_state()
 }
 
@@ -88,16 +135,22 @@ async function read_nodes(path: string, level: number) {
   )
 
   return Promise.all(
-    entries.map(async (entry) => {
-      const entry_path = await fs.join_path(path, entry.name)
-      return {
-        id: entry_path,
-        name: entry.name,
-        type: entry.isDirectory ? "dir" : "file",
-        path: entry_path,
-        level,
-      } satisfies ExplorerNode
-    }),
+    entries
+      .filter((entry) => !settings.get("EXPLORER.IGNORED").includes(entry.name))
+      .map(async (entry) => {
+        const entry_path = await fs.join_path(path, entry.name)
+        return {
+          id: entry_path,
+          name: entry.name,
+          type: entry.isDirectory ? "dir" : "file",
+          path: entry_path,
+          level,
+          opened: null,
+          is_dirty: false,
+          contents: "",
+          buffer: "",
+        } satisfies ExplorerNode
+      }),
   )
 }
 
@@ -107,7 +160,7 @@ async function read_nodes(path: string, level: number) {
 export async function load(path: string) {
   expanded.clear()
   focused = ""
-  opened.splice(0, opened.length)
+  opened = 0
   nodes.splice(0, nodes.length, ...(path ? await read_nodes(path, 0) : []))
   if (path) {
     const saved: string[] = JSON.parse(

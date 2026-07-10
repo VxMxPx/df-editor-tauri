@@ -12,6 +12,7 @@ import type { ExplorerState } from "@df/explorer/explorer.service"
 let monaco_instance: monaco.editor.IStandaloneCodeEditor
 let explorer_state: ExplorerState | undefined
 let opened_id = ""
+let is_syncing = false
 
 export const create_instance = (container: HTMLElement) => {
   monaco_instance = monaco.editor.create(container, {
@@ -41,6 +42,7 @@ export const create_instance = (container: HTMLElement) => {
   })
 
   const off = bus.on("explorer::state", sync)
+  monaco_instance.onDidChangeModelContent(update_buffer)
   monaco_instance.onDidDispose(off)
   return monaco_instance
 }
@@ -48,17 +50,30 @@ export const create_instance = (container: HTMLElement) => {
 function sync(state: ExplorerState) {
   explorer_state = state
 
-  const file = state.opened.find((node) => node.id === state.focused)
-  const value = file?.contents ?? ""
-  if (file?.id === opened_id && monaco_instance.getValue() === value) return
+  const file = state.nodes.find(
+    (node) => node.id === state.focused && node.opened !== null,
+  )
+  const next_id = file?.id ?? ""
+  if (next_id === opened_id) return
 
-  opened_id = file?.id ?? ""
-  monaco_instance.setValue(value)
+  is_syncing = true
+  opened_id = next_id
+  monaco_instance.setValue(file?.buffer ?? "")
+  queueMicrotask(() => (is_syncing = false))
+}
+
+function update_buffer() {
+  if (is_syncing) return
+
+  const file = current_file()
+  if (!file) return
+
+  explorer.set_buffer(file.id, monaco_instance.getValue())
 }
 
 function current_file() {
-  return explorer_state?.opened.find(
-    (node) => node.id === explorer_state?.focused,
+  return explorer_state?.nodes.find(
+    (node) => node.id === explorer_state?.focused && node.opened !== null,
   )
 }
 

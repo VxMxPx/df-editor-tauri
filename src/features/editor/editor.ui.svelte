@@ -1,14 +1,10 @@
 <script lang="ts">
   import { onMount } from "svelte"
   import { bus } from "@df/app"
-  import { Button, Titlebar } from "@df/ui"
   import * as editor from "./editor.service"
 
   let editor_element: HTMLDivElement
   const files = bus.bind("explorer::state")
-  const current_file = $derived(
-    files.current?.opened.find((node) => node.id === files.current?.focused),
-  )
 
   onMount(() => {
     const instance = editor.create_instance(editor_element)
@@ -17,12 +13,6 @@
 </script>
 
 <div class="editor editor-ui">
-  <Titlebar title={current_file?.name ?? "No file"}>
-    <!-- {#if current_file}
-      <Button variant="ghost" onclick={editor.save}>Save</Button>
-      <Button variant="ghost" onclick={editor.close}>Close</Button>
-    {/if} -->
-  </Titlebar>
   <div class="editor-container" bind:this={editor_element}></div>
 </div>
 
