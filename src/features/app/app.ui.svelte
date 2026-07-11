@@ -43,19 +43,6 @@
       <button onclick={() => toggle_panel("primary")}>
         <Icon name="SidebarLeft" />
       </button>
-      <Divider variant="vertical" />
-      <button onclick={vault.close} title="Close current Vault">
-        <Icon name="CircleX" />
-      </button>
-      <button onclick={() => window.location.reload()} title="Reload Window">
-        <Icon name="Refresh" />
-      </button>
-      <button
-        onclick={() => invoke("open_inspector")}
-        title="Open the Inspector"
-      >
-        <Icon name="SquareCode" />
-      </button>
       <span class="grow"></span>
       <button onclick={() => toggle_panel("secondary")}>
         <Icon name="SidebarRight" />

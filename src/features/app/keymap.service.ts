@@ -1,4 +1,5 @@
 import default_keymap from "./data/default.keymap.cfg?raw"
+import { command, default_commands } from "@df/command"
 import { explorer } from "@df/explorer"
 import * as bus from "./bus.service"
 import * as cfg from "./lib/cfg"
@@ -7,16 +8,20 @@ import * as fs from "./lib/fs"
 const actions: Record<string, () => void> = {
   SAVE: explorer.save,
   CLOSE: explorer.close,
+  COMMAND: () => command(default_commands),
 }
 
 let keymap: Record<string, string[]> = {}
 
 function matches(event: KeyboardEvent, keys: string[]) {
-  return keys.every((key) =>
-    key.toUpperCase() === "CMD"
-      ? event.metaKey
-      : event.key.toUpperCase() === key.toUpperCase(),
-  )
+  return keys.every((key) => {
+    const modifier = key.toUpperCase()
+    if (modifier === "CMD") return event.metaKey
+    if (modifier === "SHIFT") return event.shiftKey
+    if (modifier === "ALT") return event.altKey
+    if (modifier === "CTRL") return event.ctrlKey
+    return event.key.toUpperCase() === modifier
+  })
 }
 
 function handle(event: KeyboardEvent) {

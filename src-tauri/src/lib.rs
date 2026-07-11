@@ -14,6 +14,11 @@ fn open_inspector(window: tauri::WebviewWindow) {
     window.open_devtools();
 }
 
+#[tauri::command]
+fn quit_app(app: tauri::AppHandle) {
+    app.exit(0)
+}
+
 #[cfg_attr(mobile, tauri::mobile_entry_point)]
 pub fn run() {
     tauri::Builder::default()
@@ -78,7 +83,7 @@ pub fn run() {
         .plugin(tauri_plugin_dialog::init())
         .plugin(tauri_plugin_fs::init())
         .plugin(tauri_plugin_opener::init())
-        .invoke_handler(tauri::generate_handler![greet, open_inspector])
+        .invoke_handler(tauri::generate_handler![greet, open_inspector, quit_app])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
