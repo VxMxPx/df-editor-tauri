@@ -21,8 +21,8 @@
 <span
   class="ui icon_ui {class_name}"
   style:color
-  style:width={size ?? `${size}px`}
-  style:height={size ?? `${size}px`}
+  style:width={size ? `${size}px` : undefined}
+  style:height={size ? `${size}px` : undefined}
 >
   <Icon />
 </span>

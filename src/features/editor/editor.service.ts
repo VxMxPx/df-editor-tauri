@@ -13,6 +13,7 @@ let monaco_instance: monaco.editor.IStandaloneCodeEditor
 let explorer_state: ExplorerState | undefined
 let opened_id = ""
 let is_syncing = false
+let is_creating_draft = false
 
 export const create_instance = (container: HTMLElement) => {
   monaco_instance = monaco.editor.create(container, {
@@ -33,6 +34,7 @@ export const create_instance = (container: HTMLElement) => {
     wordWrap: "on",
     wrappingIndent: "none",
     wrappingStrategy: "advanced",
+    renderLineHighlight: "none",
     padding: {
       top: 10,
       bottom: 10,
@@ -56,17 +58,33 @@ function sync(state: ExplorerState) {
   const next_id = file?.id ?? ""
   if (next_id === opened_id) return
 
+  if (is_creating_draft) {
+    opened_id = next_id
+    return
+  }
+
   is_syncing = true
   opened_id = next_id
   monaco_instance.setValue(file?.buffer ?? "")
   queueMicrotask(() => (is_syncing = false))
 }
 
-function update_buffer() {
+async function update_buffer() {
   if (is_syncing) return
 
   const file = current_file()
-  if (!file) return
+  if (!file) {
+    if (is_creating_draft) return
+    is_creating_draft = true
+    let draft: string | undefined
+    try {
+      draft = await explorer.create_draft()
+    } finally {
+      is_creating_draft = false
+    }
+    if (draft) update_buffer()
+    return
+  }
 
   explorer.set_buffer(file.id, monaco_instance.getValue())
 }

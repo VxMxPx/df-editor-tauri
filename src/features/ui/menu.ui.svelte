@@ -6,6 +6,7 @@
   export type MenuItem =
     | { label: string; action: () => void; icon?: IconName; kbd?: string[] }
     | "divider"
+    | undefined
   export type MenuPosition = "top" | "bottom" | "left" | "right"
   export type MenuOptions = {
     position?: MenuPosition
@@ -130,7 +131,9 @@
   style={`left:${position.left}px;top:${position.top}px;visibility:${position.visible ? "visible" : "hidden"}`}
 >
   {#each items as item}
-    {#if item === "divider"}
+    {#if !item}
+      <!-- Pass -->
+    {:else if item === "divider"}
       <Divider />
     {:else}
       <button

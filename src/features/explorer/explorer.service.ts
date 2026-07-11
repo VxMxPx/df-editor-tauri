@@ -10,6 +10,7 @@ export type ExplorerNode = {
   path: string
   level: number
   opened: number | null
+  is_virtual: boolean
   is_dirty: boolean
   contents: string
   buffer: string
@@ -26,6 +27,7 @@ export type ExplorerState = {
 let nodes: ExplorerNode[] = []
 let focused: string = ""
 let opened = 0
+let vault_path = ""
 const expanded = new Set<string>()
 const STORAGE_ID = "df/explorer:expanded"
 
@@ -78,6 +80,24 @@ export function set_buffer(id: string, buffer: string) {
   push_state()
 }
 
+export async function delete_node(id: string) {
+  const node = nodes.find((node) => node.id === id)
+  if (!node) return
+
+  if (!node.is_virtual) await fs.remove_path(node.path)
+  const is_deleted = (path: string) =>
+    path === node.path || path.startsWith(`${node.path}/`)
+
+  nodes = nodes.filter((node) => !is_deleted(node.path))
+  for (const path of expanded) {
+    if (is_deleted(path)) expanded.delete(path)
+  }
+  if (is_deleted(focused)) focused = ""
+  push_state()
+}
+
+export { delete_node as delete }
+
 //
 // close opened file
 //
@@ -88,6 +108,13 @@ export function close(id = focused) {
   const previous = nodes
     .filter((item) => item.opened !== null && item.opened < node.opened!)
     .sort((a, b) => b.opened! - a.opened!)[0]
+
+  if (node.is_virtual) {
+    nodes = nodes.filter((node) => node.id !== id)
+    if (focused === id) focused = previous?.id ?? ""
+    push_state()
+    return
+  }
 
   nodes = nodes.map((node) =>
     node.id === id
@@ -114,6 +141,7 @@ export async function save(id = focused, buffer?: string) {
   const next_contents = buffer ?? node.buffer
   const next = {
     ...node,
+    is_virtual: false,
     contents: next_contents,
     buffer: next_contents,
     is_dirty: false,
@@ -121,6 +149,46 @@ export async function save(id = focused, buffer?: string) {
   nodes = nodes.map((node) => (node.id === id ? next : node))
   await fs.write_text(next.path, next.contents)
   push_state()
+}
+
+export async function create_draft() {
+  if (!vault_path) return
+
+  const now = new Date()
+  const date = [
+    now.toLocaleString("en-US", { month: "short" }),
+    String(now.getDate()).padStart(2, "0"),
+    String(now.getFullYear()).slice(-2),
+    "at",
+    String(now.getHours()).padStart(2, "0"),
+    String(now.getMinutes()).padStart(2, "0"),
+  ].join("-")
+  const drafts_path = await fs.join_path(vault_path, "drafts")
+  const directory = (await fs.path_exists(drafts_path))
+    ? drafts_path
+    : vault_path
+  const path = await fs.join_path(directory, `draft-${date}.md`)
+
+  const parent = nodes.find((node) => node.path === directory)
+  if (parent && !expanded.has(parent.id)) await expand(parent.id)
+
+  const node = {
+    id: path,
+    name: `draft-${date}.md`,
+    type: "file",
+    path,
+    level: parent ? parent.level + 1 : 0,
+    opened: ++opened,
+    is_virtual: true,
+    is_dirty: false,
+    contents: "",
+    buffer: "",
+  } satisfies ExplorerNode
+  const index = parent ? nodes.indexOf(parent) : nodes.length - 1
+  nodes.splice(index + 1, 0, node)
+  focused = path
+  push_state()
+  return path
 }
 
 //
@@ -146,6 +214,7 @@ async function read_nodes(path: string, level: number) {
           path: entry_path,
           level,
           opened: null,
+          is_virtual: false,
           is_dirty: false,
           contents: "",
           buffer: "",
@@ -158,6 +227,7 @@ async function read_nodes(path: string, level: number) {
 // initial (re)load of nodes
 //
 export async function load(path: string) {
+  vault_path = path
   expanded.clear()
   focused = ""
   opened = 0

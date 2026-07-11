@@ -27,10 +27,7 @@
     <!-- MAIN STATE -->
     <div class="top-layout">
       {#if app_panels.current?.primary}
-        <Panel>
-          <Titlebar transparent controls drag></Titlebar>
-          <ExplorerUi />
-        </Panel>
+        <ExplorerUi />
       {/if}
       <div class="flex min-h-0 min-w-0 flex-1 flex-col">
         <EditorUi />

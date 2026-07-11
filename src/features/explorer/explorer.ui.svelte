@@ -1,8 +1,7 @@
 <script lang="ts">
   import { bus } from "@df/app"
   import { explorer, type ExplorerNode } from "."
-  import { ui_menu } from "@df/ui"
-  import Icon from "@df/ui/icon.ui.svelte"
+  import { Titlebar, Icon, Panel, type MenuItem, ui_menu } from "@df/ui"
 
   const files = bus.bind("explorer::state")
 
@@ -17,39 +16,60 @@
     }
     if (event.button === 2) {
       ui_menu([
-        { label: "Delete", action: () => {} },
-        "divider",
-        { label: "Rename", action: () => {} },
+        ...((file.type === "dir"
+          ? [
+              {
+                label: "New file",
+                action: () => null,
+                icon: "Plus",
+              },
+              "divider",
+            ]
+          : []) as MenuItem[]),
+        {
+          label: "Delete",
+          action: () => explorer.delete(file.id),
+          icon: "Trash",
+        },
+        { label: "Rename", action: () => {}, icon: "Pencil" },
       ])
       return
     }
   }
 </script>
 
-<div class="explorer explorer_ui">
-  {#if files.current}
-    {#each files.current.nodes as file}
-      <button
-        class:dirty={file.is_dirty}
-        class:focused={files.current.focused === file.id}
-        style={`padding-left:${10 * (file.level + 1)}px;`}
-        onmousedown={(event) => handle_click(file, event)}
-      >
-        <Icon
-          name={file.type === "file"
-            ? "File"
-            : files.current.expanded.has(file.id)
-              ? "FolderOpened"
-              : "Folder"}
-        />
-        <span>{file.name}</span>
-        {#if file.is_dirty}
-          <span class="dirty-marker">•</span>
-        {/if}
-      </button>
-    {/each}
-  {/if}
-</div>
+<Panel>
+  <Titlebar transparent controls drag>
+    <button>
+      <Icon name="Plus" />
+    </button>
+  </Titlebar>
+  <div class="explorer explorer_ui">
+    {#if files.current}
+      {#each files.current.nodes as file}
+        <button
+          class:dirty={file.is_dirty}
+          class:focused={files.current.focused === file.id}
+          style={`padding-left:${10 * (file.level + 1)}px;`}
+          onmousedown={(event) => handle_click(file, event)}
+        >
+          <Icon
+            size={12}
+            name={file.type === "file"
+              ? "File"
+              : files.current.expanded.has(file.id)
+                ? "FolderOpened"
+                : "Folder"}
+          />
+          <span>{file.name}</span>
+          {#if file.is_dirty}
+            <span class="dirty-marker">•</span>
+          {/if}
+        </button>
+      {/each}
+    {/if}
+  </div>
+</Panel>
 
 <style lang="postcss">
   .explorer.explorer_ui {

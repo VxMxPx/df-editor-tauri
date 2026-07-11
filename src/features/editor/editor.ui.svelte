@@ -19,13 +19,13 @@
       (node) => node.id === files.current?.focused && node.is_dirty,
     ) ?? false,
   )
+  const opened = $derived(files.current?.nodes.filter((node) => node.opened))
 
   const spawn_opened_documents_menu = (
     event: MouseEvent & {
       currentTarget: EventTarget & HTMLButtonElement
     },
   ) => {
-    const opened = files.current?.nodes.filter((node) => node.opened)
     if (!opened || !opened.length) return
     ui_menu(
       opened.map((node) => ({
@@ -70,12 +70,13 @@
   <Titlebar
     controls={!app_panels.current?.primary}
     drag
-    title={(current_file?.name ?? "No file") + (current_file_dirty ? " •" : "")}
+    title={(current_file?.name ?? "Start typing to create a new file...") +
+      (current_file_dirty ? " •" : "")}
   >
-    <button onclick={spawn_opened_documents_menu}>
+    <button disabled={!opened?.length} onclick={spawn_opened_documents_menu}>
       <Icon name="ChevronsUpDown" />
     </button>
-    <button onclick={spawn_document_menu}>
+    <button disabled={!opened?.length} onclick={spawn_document_menu}>
       <Icon name="Menu" />
     </button>
   </Titlebar>
