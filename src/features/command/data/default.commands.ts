@@ -1,6 +1,7 @@
 import { invoke } from "@tauri-apps/api/core"
 import { getCurrentWindow } from "@tauri-apps/api/window"
 import { vault } from "@df/vault"
+import { explorer } from "@df/explorer"
 import type { CommandType } from "../command.service"
 
 export const default_commands: CommandType[] = [
@@ -16,6 +17,12 @@ export const default_commands: CommandType[] = [
     label: "Reload Window",
     type: "item",
     action: () => window.location.reload(),
+  },
+  {
+    id: "dev.explorer-reload",
+    label: "Reload Files",
+    type: "item",
+    action: explorer.reload,
   },
   {
     id: "dev.inspector",

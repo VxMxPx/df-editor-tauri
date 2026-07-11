@@ -129,7 +129,7 @@
 
 <style lang="postcss">
   .command.command_ui {
-    @apply fixed bottom-1/5 left-1/2 z-50 flex w-80 -translate-x-1/2 -translate-y-1/2 flex-col overflow-hidden rounded rounded-t-sm p-1 pb-1.5 text-white;
+    @apply fixed bottom-1/5 left-1/2 z-50 flex max-h-[calc(80vh-1rem)] w-80 max-w-[calc(100vw-2rem)] -translate-x-1/2 flex-col overflow-hidden rounded rounded-t-sm p-1 pb-1.5 text-white;
 
     background: #4a433f;
     box-shadow:
@@ -137,10 +137,10 @@
       inset 0px -3px 0px rgba(255, 255, 255, 0.25);
 
     input {
-      @apply border-b border-white/15 bg-transparent px-2 py-1 outline-none;
+      @apply shrink-0 border-b border-white/15 bg-transparent px-2 py-1 outline-none;
     }
     .items {
-      @apply flex flex-col gap-1 pt-1;
+      @apply flex min-h-0 grow flex-col gap-1 overflow-y-auto pt-1;
     }
     .group {
       @apply px-2 pt-1 text-xs text-white/50 uppercase;
