@@ -415,7 +415,9 @@ export async function expand(id: string) {
   const node = nodes[index]
   if (!node || node.type !== "dir" || expanded.has(id)) return
 
-  nodes.splice(index + 1, 0, ...(await read_nodes(node.path, node.level + 1)))
+  if (!nodes[index + 1] || nodes[index + 1].level <= node.level) {
+    nodes.splice(index + 1, 0, ...(await read_nodes(node.path, node.level + 1)))
+  }
   expanded.add(id)
   push_state()
 }
@@ -433,7 +435,6 @@ export function collapse(id: string) {
     expanded.delete(nodes[index + count + 1].id)
     count++
   }
-  nodes.splice(index + 1, count)
   push_state()
 }
 

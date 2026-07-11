@@ -9,12 +9,20 @@
     const top: ExplorerNode[] = []
     const bottom: ExplorerNode[] = []
     let list = top
+    const parents: { id: string; visible: boolean }[] = []
 
     for (const file of files.current?.nodes ?? []) {
       if (file.level === 0) {
         list = file.type === "dir" && file.place === "bottom" ? bottom : top
       }
-      list.push(file)
+
+      parents.length = file.level
+      const parent = parents.at(-1)
+      const visible =
+        !parent ||
+        (parent.visible && Boolean(files.current?.expanded.has(parent.id)))
+      parents.push({ id: file.id, visible })
+      if (visible) list.push(file)
     }
 
     return { top, bottom }
