@@ -8,6 +8,8 @@ import { bus, keymap, log, settings } from "."
 let is_init_done = false
 
 export async function init() {
+  document.addEventListener("contextmenu", (event) => event.preventDefault())
+
   //
   log.inf("app::starting_init")
 
