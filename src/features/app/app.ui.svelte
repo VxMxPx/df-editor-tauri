@@ -1,9 +1,9 @@
 <script>
   import { EditorUi } from "@df/editor"
-  import { Icon, Panel, Statusbar } from "@df/ui"
+  import { Icon, Panel, Statusbar, ui_menu } from "@df/ui"
   import { bus } from "@df/app"
   import { vault, VaultSelectUi } from "@df/vault"
-  import { ExplorerUi } from "@df/explorer"
+  import { explorer, ExplorerUi } from "@df/explorer"
   import Titlebar from "@df/ui/titlebar.ui.svelte"
 
   const has_vault = bus.bind("vault::is_opened")
@@ -48,7 +48,21 @@
             <Button variant="ghost" onclick={editor.save}>Save</Button>
             <Button variant="ghost" onclick={editor.close}>Close</Button>
           {/if} -->
-          <Icon name="Menu" />
+          <button
+            onclick={(event) => {
+              ui_menu(
+                [
+                  {
+                    label: "Close",
+                    action: () => explorer.close(current_file?.id),
+                  },
+                ],
+                event.currentTarget,
+              )
+            }}
+          >
+            <Icon name="Menu" />
+          </button>
         </Titlebar>
         <EditorUi />
       </div>
