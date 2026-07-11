@@ -1,0 +1,4 @@
+interface:
+  display_name: "Add Icon"
+  short_description: "Add a project icon from SVG markup"
+  default_prompt: "Use $add-icon to add this SVG as a project icon."
