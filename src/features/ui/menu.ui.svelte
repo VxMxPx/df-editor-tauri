@@ -1,6 +1,6 @@
 <script lang="ts">
   import { onMount } from "svelte"
-  import { Icon, type IconName } from "."
+  import { Divider, Icon, type IconName } from "."
   import Kbd from "./kbd.ui.svelte"
 
   export type MenuItem =
@@ -131,7 +131,7 @@
 >
   {#each items as item}
     {#if item === "divider"}
-      <hr />
+      <Divider />
     {:else}
       <button
         onclick={() => {
@@ -157,7 +157,7 @@
 
 <style lang="postcss">
   .ui.menu_ui {
-    @apply fixed z-50 flex min-w-30 flex-col overflow-hidden rounded p-1 text-white;
+    @apply fixed z-50 flex min-w-30 flex-col gap-1 overflow-hidden rounded p-1 text-white;
     border: 1px solid #595451;
     background: #221b17;
     padding-bottom: 6px;
@@ -170,9 +170,6 @@
       &:hover {
         @apply bg-white/25;
       }
-    }
-    hr {
-      @apply my-1 border-white/15;
     }
   }
 </style>

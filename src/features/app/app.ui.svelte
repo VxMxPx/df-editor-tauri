@@ -1,6 +1,7 @@
 <script lang="ts">
   import { EditorUi } from "@df/editor"
-  import { Icon, Panel, Statusbar } from "@df/ui"
+  import { invoke } from "@tauri-apps/api/core"
+  import { Divider, Icon, Panel, Statusbar } from "@df/ui"
   import { bus } from "@df/app"
   import { vault, VaultSelectUi } from "@df/vault"
   import { ExplorerUi } from "@df/explorer"
@@ -42,11 +43,18 @@
       <button onclick={() => toggle_panel("primary")}>
         <Icon name="SidebarLeft" />
       </button>
-      <button onclick={vault.close}>
+      <Divider variant="vertical" />
+      <button onclick={vault.close} title="Close current Vault">
         <Icon name="CircleX" />
       </button>
-      <button onclick={() => window.location.reload()}>
+      <button onclick={() => window.location.reload()} title="Reload Window">
         <Icon name="Refresh" />
+      </button>
+      <button
+        onclick={() => invoke("open_inspector")}
+        title="Open the Inspector"
+      >
+        <Icon name="SquareCode" />
       </button>
       <span class="grow"></span>
       <button onclick={() => toggle_panel("secondary")}>
