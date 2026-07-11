@@ -30,5 +30,6 @@ Tauri 2 desktop app with a Svelte 5, TypeScript, Vite, Tailwind CSS 4, and Monac
 - Feature requirements live in `requirements/`.
 - For a request such as `implement 001`, follow `skills/implement-requirement/SKILL.md`.
 - For a request such as `add icon <svg>`, follow `skills/add-icon/SKILL.md`.
+- For a request to commit changes, follow `skills/commit/SKILL.md`.
 - Before implementing a requirement, review it, ask about unclear decisions, and update it for clarity once aligned.
 - Only then implement it. When complete, offer to create logical commits.
