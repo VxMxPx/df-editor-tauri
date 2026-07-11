@@ -14,6 +14,7 @@ export type ExplorerNode = {
   level: number
   opened: number | null
   is_virtual: boolean
+  is_readonly: boolean
   is_dirty: boolean
   contents: string
   buffer: string
@@ -78,12 +79,20 @@ export async function open(id: string) {
   push_state()
 }
 
+export async function open_path(path: string) {
+  const parent = nodes
+    .filter((node) => node.type === "dir" && path.startsWith(`${node.path}/`))
+    .sort((a, b) => b.path.length - a.path.length)[0]
+  if (parent && !expanded.has(parent.id)) await expand(parent.id)
+  await open(path)
+}
+
 //
 // update file buffer and dirty state
 //
 export function set_buffer(id: string, buffer: string) {
   const node = nodes.find((node) => node.id === id)
-  if (!node) return
+  if (!node || node.is_readonly) return
   if (node.buffer === buffer) return
 
   nodes = nodes.map((node) =>
@@ -150,7 +159,7 @@ export function close(id = focused) {
 //
 export async function save(id = focused, buffer?: string) {
   const node = nodes.find((node) => node.id === id)
-  if (!node || node.opened === null) return
+  if (!node || node.opened === null || node.is_readonly) return
 
   const next_contents = buffer ?? node.buffer
   const next = {
@@ -194,6 +203,7 @@ export async function create_draft() {
     level: parent ? parent.level + 1 : 0,
     opened: ++opened,
     is_virtual: true,
+    is_readonly: false,
     is_dirty: false,
     contents: "",
     buffer: "",
@@ -206,6 +216,62 @@ export async function create_draft() {
   focused = path
   push_state()
   return path
+}
+
+export async function open_virtual({
+  id,
+  name,
+  path,
+  contents,
+  readonly = false,
+  replace = false,
+}: {
+  id: string
+  name: string
+  path: string
+  contents: string
+  readonly?: boolean
+  replace?: boolean
+}) {
+  const existing = nodes.find((node) => node.id === id)
+  if (existing) {
+    if (replace) {
+      nodes = nodes.map((node) =>
+        node.id === id
+          ? { ...node, contents, buffer: contents, is_dirty: false }
+          : node,
+      )
+    }
+    focused = id
+    push_state()
+    return
+  }
+
+  const parent = nodes
+    .filter((node) => node.type === "dir" && path.startsWith(`${node.path}/`))
+    .sort((a, b) => b.path.length - a.path.length)[0]
+  if (parent && !expanded.has(parent.id)) await expand(parent.id)
+
+  const node = {
+    id,
+    name,
+    type: "file",
+    path,
+    level: parent ? parent.level + 1 : 0,
+    opened: ++opened,
+    is_virtual: true,
+    is_readonly: readonly,
+    is_dirty: false,
+    contents,
+    buffer: contents,
+    place: "top",
+    weight: null,
+    restrict: [],
+  } satisfies ExplorerNode
+  const index = parent ? nodes.indexOf(parent) : nodes.length - 1
+  nodes.splice(index + 1, 0, node)
+  focused = id
+  push_state()
 }
 
 //
@@ -262,6 +328,7 @@ async function read_nodes(path: string, level: number) {
           level,
           opened: null,
           is_virtual: false,
+          is_readonly: false,
           is_dirty: false,
           contents: "",
           buffer: "",
@@ -300,6 +367,8 @@ export async function load(path: string) {
 }
 
 export const reload = () => load(vault_path)
+
+export const state = () => ({ nodes, focused, expanded: [...expanded] })
 
 //
 // set focused file state

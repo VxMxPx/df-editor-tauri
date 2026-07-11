@@ -18,6 +18,7 @@ export type CommandItem = Extract<CommandType, { type: "item" }>
 
 let panel: Record<string, any> | undefined
 const STORAGE_ID = "df/commands:recent"
+const RECENT_LIMIT = 5
 
 export function recent(items: CommandType[]) {
   const ids: string[] = JSON.parse(localStorage.getItem(STORAGE_ID) || "[]")
@@ -39,7 +40,7 @@ export function use(item: CommandItem) {
   localStorage.setItem(
     STORAGE_ID,
     JSON.stringify(
-      [item.id, ...ids.filter((id) => id !== item.id)].slice(0, 10),
+      [item.id, ...ids.filter((id) => id !== item.id)].slice(0, RECENT_LIMIT),
     ),
   )
 }

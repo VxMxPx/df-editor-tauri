@@ -12,6 +12,9 @@ const actions: Record<string, () => void> = {
 }
 
 let keymap: Record<string, string[]> = {}
+let values: Record<string, unknown> = {}
+let comments: Record<string, unknown> = {}
+let vault_path = ""
 
 function matches(event: KeyboardEvent, keys: string[]) {
   return keys.every((key) => {
@@ -41,19 +44,30 @@ function handle(event: KeyboardEvent) {
   }
 }
 
-async function load(vault_path: string) {
-  const defaults = cfg.process(default_keymap.split("\n")).values
-  const path = await fs.join_path(vault_path, "_df", "keymap.cfg")
+async function load(next_vault_path: string) {
+  vault_path = next_vault_path
+  const defaults = cfg.process(default_keymap.split("\n"))
+  const path = await file_path(vault_path)
   const vault = (await fs.path_exists(path))
-    ? cfg.process((await fs.read_text(path)).split("\n")).values
-    : {}
+    ? cfg.process((await fs.read_text(path)).split("\n"))
+    : { values: {}, comments: {} }
 
+  values = { ...defaults.values, ...vault.values }
+  comments = { ...defaults.comments, ...vault.comments }
   keymap = Object.fromEntries(
-    Object.entries({ ...defaults, ...vault }).filter(
+    Object.entries(values).filter(
       ([id, value]) => id.startsWith("ALL.") && Array.isArray(value),
     ),
   ) as Record<string, string[]>
 }
+
+export const path = () => file_path(vault_path)
+export const contents = () => cfg.encode(values, comments)
+export const default_contents = () => default_keymap
+export const reload = () => load(vault_path)
+
+const file_path = (vault_path: string) =>
+  fs.join_path(vault_path, "_df", "keymap.cfg")
 
 export function init() {
   document.addEventListener("keydown", handle, true)

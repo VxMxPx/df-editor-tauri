@@ -67,6 +67,13 @@
     return item !== "divider" && item.type === "item"
   }
 
+  $effect(() => {
+    selected
+    panel
+      ?.querySelector("button.selected")
+      ?.scrollIntoView({ block: "nearest" })
+  })
+
   onMount(() => {
     input.focus()
     const keydown = (event: KeyboardEvent) => {
@@ -141,6 +148,10 @@
     }
     .items {
       @apply flex min-h-0 grow flex-col gap-1 overflow-y-auto pt-1;
+      scrollbar-width: none;
+      &::-webkit-scrollbar {
+        display: none;
+      }
     }
     .group {
       @apply px-2 pt-1 text-xs text-white/50 uppercase;

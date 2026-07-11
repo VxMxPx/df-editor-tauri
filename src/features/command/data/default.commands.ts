@@ -1,7 +1,8 @@
 import { invoke } from "@tauri-apps/api/core"
 import { getCurrentWindow } from "@tauri-apps/api/window"
-import { vault } from "@df/vault"
+import { fs, keymap, settings } from "@df/app"
 import { explorer } from "@df/explorer"
+import { vault } from "@df/vault"
 import type { CommandType } from "../command.service"
 
 export const default_commands: CommandType[] = [
@@ -25,10 +26,90 @@ export const default_commands: CommandType[] = [
     action: explorer.reload,
   },
   {
+    id: "dev.explorer-state",
+    label: "Drop Explorer State",
+    type: "item",
+    action: () =>
+      explorer.open_virtual({
+        id: "dev:explorer-state",
+        name: "explorer-state.json",
+        path: "explorer-state.json",
+        contents: JSON.stringify(explorer.state(), null, 2),
+        readonly: true,
+        replace: true,
+      }),
+  },
+  {
     id: "dev.inspector",
     label: "Open the Inspector",
     type: "item",
     action: () => invoke("open_inspector"),
+  },
+  { label: "Settings", type: "group" },
+  {
+    id: "settings.default.open",
+    label: "Open Default Settings",
+    type: "item",
+    action: () =>
+      explorer.open_virtual({
+        id: "settings:default",
+        name: "default.config.cfg",
+        path: "default.config.cfg",
+        contents: settings.default_contents(),
+        readonly: true,
+      }),
+  },
+  {
+    id: "keymap.default.open",
+    label: "Open Default Keymap",
+    type: "item",
+    action: () =>
+      explorer.open_virtual({
+        id: "keymap:default",
+        name: "default.keymap.cfg",
+        path: "default.keymap.cfg",
+        contents: keymap.default_contents(),
+        readonly: true,
+      }),
+  },
+  {
+    id: "settings.user.open",
+    label: "Open User Settings",
+    type: "item",
+    action: async () => {
+      const path = await settings.path()
+      if (await fs.path_exists(path)) return explorer.open_path(path)
+      explorer.open_virtual({
+        id: path,
+        name: "settings.cfg",
+        path,
+        contents: settings.contents(),
+      })
+    },
+  },
+  {
+    id: "keymap.user.open",
+    label: "Open User Keymap",
+    type: "item",
+    action: async () => {
+      const path = await keymap.path()
+      if (await fs.path_exists(path)) return explorer.open_path(path)
+      explorer.open_virtual({
+        id: path,
+        name: "keymap.cfg",
+        path,
+        contents: keymap.contents(),
+      })
+    },
+  },
+  {
+    id: "settings.reload",
+    label: "Reload Settings",
+    type: "item",
+    action: async () => {
+      await settings.reload()
+      await keymap.reload()
+    },
   },
   "divider",
   { label: "Application", type: "group" },

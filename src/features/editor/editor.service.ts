@@ -56,6 +56,7 @@ function sync(state: ExplorerState) {
     (node) => node.id === state.focused && node.opened !== null,
   )
   const next_id = file?.id ?? ""
+  monaco_instance.updateOptions({ readOnly: file?.is_readonly ?? false })
   if (next_id === opened_id) return
 
   if (is_creating_draft) {
@@ -85,6 +86,8 @@ async function update_buffer() {
     if (draft) update_buffer()
     return
   }
+
+  if (file.is_readonly) return
 
   explorer.set_buffer(file.id, monaco_instance.getValue())
 }

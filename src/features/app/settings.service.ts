@@ -34,7 +34,7 @@ function load_default_settings() {
 // load vault settings
 //
 async function load_vault_settings() {
-  const settings_path = await fs.join_path(vault_path, "_df", "settings.cfg")
+  const settings_path = await path()
   if (!(await fs.path_exists(settings_path))) return
   const parsed = cfg.process((await fs.read_text(settings_path)).split("\n"))
   values = { ...values, ...parsed.values }
@@ -65,25 +65,31 @@ export function set<K extends SettingsKey>(key: K, value: DefaultSettings[K]) {
 // write settings
 //
 export async function write() {
+  const settings_path = await path()
   const dir = await fs.join_path(vault_path, "_df")
   await fs.create_dir(dir)
-  await fs.write_text(
-    await fs.join_path(dir, "settings.cfg"),
-    cfg.encode(values, comments),
-  )
+  await fs.write_text(settings_path, contents())
   return true
 }
+
+export const path = () => fs.join_path(vault_path, "_df", "settings.cfg")
+export const contents = () => cfg.encode(values, comments)
+export const default_contents = () => default_config
+
+async function load(path: string) {
+  vault_path = path
+  const defaults = load_default_settings()
+  const vault = await load_vault_settings()
+  values = { ...defaults.values, ...vault?.values }
+  comments = { ...defaults.comments, ...vault?.comments }
+  log.inf("settings", "init", JSON.stringify(values))
+}
+
+export const reload = () => load(vault_path)
 
 //
 // initialization
 //
 export async function init() {
-  return bus.on("vault::path_change", async (init_vault_path) => {
-    vault_path = init_vault_path
-    const defaults = load_default_settings()
-    const vault = await load_vault_settings()
-    values = { ...defaults.values, ...vault?.values }
-    comments = { ...defaults.comments, ...vault?.comments }
-    log.inf('settings', 'init', JSON.stringify(values))
-  })
+  return bus.on("vault::path_change", load)
 }
