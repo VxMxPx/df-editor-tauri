@@ -31,7 +31,10 @@
       opened.map((node) => ({
         label: node.name,
         action: () => explorer.focus(node.id),
-        kbd: ["CMD", `${node.opened}`],
+        kbd:
+          node.opened && node.opened <= 9
+            ? ["CMD", `${node.opened}`]
+            : undefined,
         icon:
           node.id === files.current?.focused
             ? "CircleFilledSmall"

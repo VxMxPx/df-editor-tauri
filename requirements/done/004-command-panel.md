@@ -17,11 +17,13 @@ Add new feature (/feature) called commands.
 - Close after an item action, on outside click, or on `Escape`.
 - Up and Down select the previous and next command item, wrapping at either end.
 - Enter executes the selected command.
+- Store the IDs of the ten most recently used commands in localStorage and show them in a `Recent` group above the regular list.
 - Quit exits the whole application.
 - The shape is:
 
 ```
 type CommandType = {
+  id: string
   label: string
   type: 'item'
   action: () => void

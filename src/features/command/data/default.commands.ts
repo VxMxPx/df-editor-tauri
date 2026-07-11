@@ -5,13 +5,20 @@ import type { CommandType } from "../command.service"
 
 export const default_commands: CommandType[] = [
   { label: "Development", type: "group" },
-  { label: "Close Vault", type: "item", action: vault.close },
   {
+    id: "dev.vault-close",
+    label: "Close Vault",
+    type: "item",
+    action: vault.close,
+  },
+  {
+    id: "dev.reload",
     label: "Reload Window",
     type: "item",
     action: () => window.location.reload(),
   },
   {
+    id: "dev.inspector",
     label: "Open the Inspector",
     type: "item",
     action: () => invoke("open_inspector"),
@@ -19,6 +26,7 @@ export const default_commands: CommandType[] = [
   "divider",
   { label: "Application", type: "group" },
   {
+    id: "app.fullscreen",
     label: "Full Screen",
     type: "item",
     action: async () => {
@@ -27,9 +35,15 @@ export const default_commands: CommandType[] = [
     },
   },
   {
+    id: "app.minimize",
     label: "Minimize",
     type: "item",
     action: () => getCurrentWindow().minimize(),
   },
-  { label: "Quit", type: "item", action: () => invoke("quit_app") },
+  {
+    id: "app.quit",
+    label: "Quit",
+    type: "item",
+    action: () => invoke("quit_app"),
+  },
 ]

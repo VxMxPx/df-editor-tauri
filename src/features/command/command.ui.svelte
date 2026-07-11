@@ -1,7 +1,12 @@
 <script lang="ts">
   import { onMount } from "svelte"
   import { Divider, Icon, Kbd } from "@df/ui"
-  import type { CommandType } from "./command.service"
+  import {
+    recent,
+    use,
+    type CommandItem,
+    type CommandType,
+  } from "./command.service"
 
   let { items, close }: { items: CommandType[]; close: () => void } = $props()
   let panel: HTMLElement
@@ -9,13 +14,13 @@
   let query = $state("")
   let selected = $state(0)
 
+  const match = (label: string) =>
+    label.toLowerCase().includes(query.toLowerCase())
+
   const filtered = $derived.by(() => {
     const result: CommandType[] = []
     let group: CommandType | undefined
     let divider = false
-    const match = (label: string) =>
-      label.toLowerCase().includes(query.toLowerCase())
-
     for (const item of items) {
       if (item === "divider") {
         divider = result.length > 0
@@ -35,7 +40,26 @@
     return result
   })
 
-  const commands = $derived(filtered.filter(is_item))
+  const recent_items = $derived(
+    recent(items).filter((item) => match(item.label)),
+  )
+  const displayed = $derived([
+    ...(recent_items.length
+      ? ([
+          { label: "Recent", type: "group" },
+          ...recent_items,
+          "divider",
+        ] as CommandType[])
+      : []),
+    ...filtered,
+  ])
+  const commands = $derived(displayed.filter(is_item))
+
+  function run(item: CommandItem) {
+    use(item)
+    item.action()
+    close()
+  }
 
   function is_item(
     item: CommandType,
@@ -58,8 +82,7 @@
       }
       if (event.key === "Enter") {
         event.preventDefault()
-        commands[selected].action()
-        close()
+        run(commands[selected])
       }
     }
     const outside = (event: PointerEvent) => {
@@ -79,9 +102,13 @@
     bind:this={input}
     bind:value={query}
     placeholder="Search commands..."
+    autocomplete="off"
+    autocapitalize="off"
+    autocorrect="off"
+    spellcheck={false}
   />
   <div class="items">
-    {#each filtered as item}
+    {#each displayed as item}
       {#if item === "divider"}
         <Divider />
       {:else if item.type === "group"}
@@ -89,10 +116,7 @@
       {:else}
         <button
           class:selected={commands[selected] === item}
-          onclick={() => {
-            item.action()
-            close()
-          }}
+          onclick={() => run(item)}
         >
           {#if item.icon}<Icon name={item.icon} />{/if}
           <span class="grow text-left">{item.label}</span>

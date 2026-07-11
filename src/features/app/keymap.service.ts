@@ -25,6 +25,13 @@ function matches(event: KeyboardEvent, keys: string[]) {
 }
 
 function handle(event: KeyboardEvent) {
+  if (event.metaKey && /^[1-9]$/.test(event.key)) {
+    event.preventDefault()
+    event.stopPropagation()
+    explorer.focus_opened(Number(event.key))
+    return
+  }
+
   for (const [id, keys] of Object.entries(keymap)) {
     const action = actions[id.split(".").at(-1) ?? ""]
     if (!action || !matches(event, keys)) continue

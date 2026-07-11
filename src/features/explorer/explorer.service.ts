@@ -179,6 +179,11 @@ export function focus(id: string) {
   push_state()
 }
 
+export function focus_opened(opened: number) {
+  const node = nodes.find((node) => node.opened === opened)
+  if (node) focus(node.id)
+}
+
 //
 // expand folder by id
 //
