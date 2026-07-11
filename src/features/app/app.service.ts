@@ -41,6 +41,11 @@ export async function init() {
     bus.signal("app::init_done")
   })
 
+  bus.signal("app::panels", {
+    primary: true,
+    secondary: false,
+  })
+
   //
   // initialize vault
   // stop execution of further services if vault is not opened

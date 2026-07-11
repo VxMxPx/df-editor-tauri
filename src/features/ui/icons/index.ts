@@ -3,5 +3,9 @@ export { default as SidebarRight } from "./sidebar-right.svg.svelte"
 export { default as Folder } from "./folder.svg.svelte"
 export { default as FolderOpened } from "./folder-opened.svg.svelte"
 export { default as File } from "./file.svg.svelte"
-export { default as CircleX } from './circle-x.svg.svelte'
-export { default as Menu } from './menu.svg.svelte'
+export { default as CircleX } from "./circle-x.svg.svelte"
+export { default as CircleSmall } from "./circle-small.svg.svelte"
+export { default as CircleFilledSmall } from "./circle-filled-small.svg.svelte"
+export { default as ChevronsUpDown } from "./chevrons-up-down.svg.svelte"
+export { default as Menu } from "./menu.svg.svelte"
+export { default as Refresh } from "./refresh.svg.svelte"

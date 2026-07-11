@@ -1,13 +1,15 @@
 <script lang="ts">
   import * as icons from "./icons"
 
+  export type IconName = keyof typeof icons
+
   let {
     name,
     class: class_name = "",
     color,
     size,
   }: {
-    name: keyof typeof icons
+    name: IconName
     class?: string
     color?: string
     size?: number

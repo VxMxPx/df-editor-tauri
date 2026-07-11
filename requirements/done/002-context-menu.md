@@ -15,7 +15,7 @@ ui_menu(items, target)
 ```
 
 - Target argument is optional and has type `HTMLElement`. Position the menu below and left-aligned to it.
-- Without a target, center the menu in the viewport.
+- Without a target, position the menu at the latest mouse coordinates.
 - Keep the menu within the viewport bounds.
 - Add an optional third `options` argument: `{ position?: "top" | "bottom" | "left" | "right" }`. Default to `bottom`.
 - When the requested position does not fit, try the other positions before clamping the menu inside the viewport.

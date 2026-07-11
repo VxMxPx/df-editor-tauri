@@ -1,17 +1,28 @@
 <script lang="ts">
   import { onMount } from "svelte"
-  import type { MenuItem, MenuOptions, MenuPosition } from "./ui.service"
+  import { Icon, type IconName } from "."
+  import Kbd from "./kbd.ui.svelte"
+
+  export type MenuItem =
+    | { label: string; action: () => void; icon?: IconName; kbd?: string[] }
+    | "divider"
+  export type MenuPosition = "top" | "bottom" | "left" | "right"
+  export type MenuOptions = {
+    position?: MenuPosition
+  }
 
   const GAP = 10
 
   let {
     items,
     target,
+    mouse,
     options,
     close,
   }: {
     items: MenuItem[]
     target?: HTMLElement
+    mouse: { left: number; top: number }
     options: MenuOptions
     close: () => void
   } = $props()
@@ -65,8 +76,8 @@
 
   function get_position(bounds: DOMRect) {
     const target_bounds = target?.getBoundingClientRect()
-    let left = (window.innerWidth - bounds.width) / 2
-    let top = (window.innerHeight - bounds.height) / 2
+    let left = mouse.left
+    let top = mouse.top
 
     if (!target_bounds) return { left, top }
 
@@ -128,7 +139,17 @@
           close()
         }}
       >
-        {item.label}
+        {#if item.icon}
+          <Icon name={item.icon} />
+        {/if}
+        <span class="grow text-left">
+          {item.label}
+        </span>
+        {#if item.kbd}
+          <span class="ml-2">
+            <Kbd shortcut={item.kbd} />
+          </span>
+        {/if}
       </button>
     {/if}
   {/each}
@@ -136,17 +157,22 @@
 
 <style lang="postcss">
   .ui.menu_ui {
-    @apply fixed z-50 flex min-w-20 flex-col overflow-hidden rounded border border-black/15 p-1 text-black;
-    background: #fcf9f7;
-    box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.2);
+    @apply fixed z-50 flex min-w-30 flex-col overflow-hidden rounded p-1 text-white;
+    border: 1px solid #595451;
+    background: #221b17;
+    padding-bottom: 6px;
+    box-shadow:
+      2px 8px 8px rgba(0, 0, 0, 0.35),
+      inset 0px -3px 0px rgba(255, 255, 255, 0.25);
+
     button {
-      @apply justify-start rounded px-2 py-0.5;
+      @apply flex items-center justify-start gap-2 rounded px-1 py-0.5;
       &:hover {
-        @apply bg-black/10;
+        @apply bg-white/25;
       }
     }
     hr {
-      @apply my-1 border-black/15;
+      @apply my-1 border-white/15;
     }
   }
 </style>

@@ -1,13 +1,12 @@
 import { mount, unmount } from "svelte"
-import MenuUi from "./menu.ui.svelte"
-
-export type MenuItem = { label: string; action: () => void } | "divider"
-export type MenuPosition = "top" | "bottom" | "left" | "right"
-export type MenuOptions = {
-  position?: MenuPosition
-}
+import MenuUi, { MenuItem, MenuOptions } from "./menu.ui.svelte"
 
 let menu: Record<string, any> | undefined
+let mouse = { left: 0, top: 0 }
+
+document.addEventListener("pointerdown", (event) => {
+  mouse = { left: event.clientX, top: event.clientY }
+})
 
 export function ui_menu(
   items: MenuItem[],
@@ -21,6 +20,7 @@ export function ui_menu(
     props: {
       items,
       target,
+      mouse,
       options,
       close: () => {
         if (!menu) return

@@ -2,9 +2,60 @@
   import { onMount } from "svelte"
   import { bus } from "@df/app"
   import * as editor from "./editor.service"
+  import { Titlebar, Icon, ui_menu } from "@df/ui"
+  import { explorer } from "@df/explorer"
 
   let editor_element: HTMLDivElement
   const files = bus.bind("explorer::state")
+  const app_panels = bus.bind("app::panels")
+
+  const current_file = $derived(
+    files.current?.nodes.find(
+      (node) => node.id === files.current?.focused && node.opened !== null,
+    ),
+  )
+  const current_file_dirty = $derived(
+    files.current?.nodes.some(
+      (node) => node.id === files.current?.focused && node.is_dirty,
+    ) ?? false,
+  )
+
+  const spawn_opened_documents_menu = (
+    event: MouseEvent & {
+      currentTarget: EventTarget & HTMLButtonElement
+    },
+  ) => {
+    const opened = files.current?.nodes.filter((node) => node.opened)
+    if (!opened || !opened.length) return
+    ui_menu(
+      opened.map((node) => ({
+        label: node.name,
+        action: () => explorer.focus(node.id),
+        kbd: ["CMD", `${node.opened}`],
+        icon:
+          node.id === files.current?.focused
+            ? "CircleFilledSmall"
+            : "CircleSmall",
+      })),
+      event.currentTarget,
+    )
+  }
+
+  const spawn_document_menu = (
+    event: MouseEvent & {
+      currentTarget: EventTarget & HTMLButtonElement
+    },
+  ) => {
+    ui_menu(
+      [
+        {
+          label: "Close",
+          action: () => explorer.close(current_file?.id),
+        },
+      ],
+      event.currentTarget,
+    )
+  }
 
   onMount(() => {
     const instance = editor.create_instance(editor_element)
@@ -13,6 +64,18 @@
 </script>
 
 <div class="editor editor-ui">
+  <Titlebar
+    controls={!app_panels.current?.primary}
+    drag
+    title={(current_file?.name ?? "No file") + (current_file_dirty ? " •" : "")}
+  >
+    <button onclick={spawn_opened_documents_menu}>
+      <Icon name="ChevronsUpDown" />
+    </button>
+    <button onclick={spawn_document_menu}>
+      <Icon name="Menu" />
+    </button>
+  </Titlebar>
   <div class="editor-container" bind:this={editor_element}></div>
 </div>
 

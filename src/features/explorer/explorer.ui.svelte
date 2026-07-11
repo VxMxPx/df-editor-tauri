@@ -1,18 +1,28 @@
 <script lang="ts">
   import { bus } from "@df/app"
-  import { explorer } from "."
+  import { explorer, type ExplorerNode } from "."
+  import { ui_menu } from "@df/ui"
   import Icon from "@df/ui/icon.ui.svelte"
 
   const files = bus.bind("explorer::state")
 
-  // toggle state
-  function toggle(id: string) {
-    explorer.toggle(id)
-  }
-
-  // open a file
-  function open(id: string) {
-    explorer.open(id)
+  function handle_click(
+    file: ExplorerNode,
+    event: MouseEvent & {
+      currentTarget: EventTarget & HTMLButtonElement
+    },
+  ) {
+    if (event.button === 0) {
+      file.type === "dir" ? explorer.toggle(file.id) : explorer.open(file.id)
+    }
+    if (event.button === 2) {
+      ui_menu([
+        { label: "Delete", action: () => {} },
+        "divider",
+        { label: "Rename", action: () => {} },
+      ])
+      return
+    }
   }
 </script>
 
@@ -23,9 +33,7 @@
         class:dirty={file.is_dirty}
         class:focused={files.current.focused === file.id}
         style={`padding-left:${10 * (file.level + 1)}px;`}
-        onclick={file.type === "dir"
-          ? () => toggle(file.id)
-          : () => open(file.id)}
+        onmousedown={(event) => handle_click(file, event)}
       >
         <Icon
           name={file.type === "file"
@@ -45,7 +53,7 @@
 
 <style lang="postcss">
   .explorer.explorer_ui {
-    @apply flex flex-col;
+    @apply flex flex-col select-none;
     button {
       @apply flex flex-row items-center justify-start gap-1.5 px-2.5 py-1;
       &:hover,

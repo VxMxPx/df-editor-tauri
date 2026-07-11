@@ -31,12 +31,14 @@
   onmousedown={start_drag}
 >
   <span>{title}</span>
-  {@render children?.()}
+  <div class="flex gap-2">
+    {@render children?.()}
+  </div>
 </header>
 
 <style lang="postcss">
   header {
-    @apply cursor-default select-none z-2 flex h-10 flex-row items-center justify-between gap-2.5 border-b border-b-black/15 px-2.5 py-0 text-black;
+    @apply z-2 flex h-10 cursor-default flex-row items-center justify-between gap-2.5 border-b border-b-black/15 px-2.5 py-0 text-black select-none;
     background-color: #fcf9f7;
     box-shadow: 0px 2px 9px rgba(0, 0, 0, 0.1);
   }
