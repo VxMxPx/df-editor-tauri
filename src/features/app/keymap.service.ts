@@ -6,6 +6,7 @@ import * as fs from "./lib/fs"
 
 const actions: Record<string, () => void> = {
   SAVE: explorer.save,
+  CLOSE: explorer.close,
 }
 
 let keymap: Record<string, string[]> = {}
@@ -23,6 +24,7 @@ function handle(event: KeyboardEvent) {
     const action = actions[id.split(".").at(-1) ?? ""]
     if (!action || !matches(event, keys)) continue
     event.preventDefault()
+    event.stopPropagation()
     action()
   }
 }
@@ -42,6 +44,6 @@ async function load(vault_path: string) {
 }
 
 export function init() {
-  document.addEventListener("keydown", handle)
+  document.addEventListener("keydown", handle, true)
   return bus.on("vault::path_change", load)
 }
