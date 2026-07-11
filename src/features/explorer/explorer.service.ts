@@ -103,7 +103,7 @@ export function set_buffer(id: string, buffer: string) {
   push_state()
 }
 
-export async function delete_node(id: string) {
+export async function delete_node(id = focused) {
   const node = nodes.find((node) => node.id === id)
   if (!node) return
 
@@ -154,6 +154,24 @@ export function close(id = focused) {
   push_state()
 }
 
+export function close_all() {
+  nodes = nodes
+    .filter((node) => !node.is_virtual)
+    .map((node) =>
+      node.opened === null
+        ? node
+        : {
+            ...node,
+            opened: null,
+            is_dirty: false,
+            contents: "",
+            buffer: "",
+          },
+    )
+  focused = ""
+  push_state()
+}
+
 //
 // save file by id / write file's content (must be open)
 //
@@ -172,6 +190,12 @@ export async function save(id = focused, buffer?: string) {
   nodes = nodes.map((node) => (node.id === id ? next : node))
   await fs.write_text(next.path, next.contents)
   push_state()
+}
+
+export async function save_all() {
+  for (const node of nodes) {
+    if (node.opened !== null && !node.is_readonly) await save(node.id)
+  }
 }
 
 export async function create_draft() {

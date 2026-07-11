@@ -55,9 +55,19 @@
           label: "Close",
           action: () => explorer.close(current_file?.id),
         },
+        {
+          label: "Close all",
+          action: () => explorer.close_all(),
+        },
       ],
       event.currentTarget,
     )
+  }
+
+  function toggle_focus() {
+    const panels = app_panels.current
+    if (!panels) return
+    bus.signal("app::panels", { ...panels, focus: !panels.focus })
   }
 
   onMount(() => {
@@ -68,11 +78,15 @@
 
 <div class="editor editor-ui">
   <Titlebar
-    controls={!app_panels.current?.primary}
+    controls={!app_panels.current?.primary ||
+      Boolean(app_panels.current?.focus)}
     drag
     title={(current_file?.name ?? "Start typing to create a new file...") +
       (current_file_dirty ? " •" : "")}
   >
+    <button onclick={toggle_focus}>
+      <Icon name="Maximize" />
+    </button>
     <button disabled={!opened?.length} onclick={spawn_opened_documents_menu}>
       <Icon name="ChevronsUpDown" />
     </button>

@@ -46,6 +46,7 @@ export async function init() {
   bus.signal("app::panels", {
     primary: true,
     secondary: false,
+    focus: false,
   })
 
   //

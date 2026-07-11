@@ -93,6 +93,7 @@
   >
     <Icon
       size={12}
+      class="shrink-0 grow-0"
       name={file.icon ??
         (file.type === "file"
           ? "File"
@@ -100,7 +101,7 @@
             ? "FolderOpened"
             : "Folder")}
     />
-    <span>{file.name}</span>
+    <span class="label">{file.name}</span>
     {#if file.is_dirty}
       <span class="dirty-marker">•</span>
     {/if}
@@ -109,18 +110,21 @@
 
 <style lang="postcss">
   .explorer.explorer_ui {
-    @apply flex h-full flex-col select-none;
+    @apply flex h-full w-55 flex-col select-none;
     .top {
       @apply w-full grow;
     }
     button {
-      @apply flex w-full flex-row items-center justify-start gap-1.5 px-2.5 py-1;
+      @apply flex w-full flex-row items-center justify-start gap-1.5 overflow-hidden px-2.5 py-1 whitespace-nowrap;
+      > .label {
+        @apply min-w-0 grow truncate text-left;
+      }
       &:hover,
       &.focused {
         @apply bg-white/25;
       }
       .dirty-marker {
-        @apply ml-auto;
+        @apply ml-auto shrink-0;
       }
     }
   }

@@ -26,25 +26,27 @@
   {#if is_ready}
     <!-- MAIN STATE -->
     <div class="top-layout">
-      {#if app_panels.current?.primary}
+      {#if app_panels.current?.primary && !app_panels.current.focus}
         <ExplorerUi />
       {/if}
       <div class="flex min-h-0 min-w-0 flex-1 flex-col">
         <EditorUi />
       </div>
-      {#if app_panels.current?.secondary}
+      {#if app_panels.current?.secondary && !app_panels.current.focus}
         <Panel>Secondary panel...</Panel>
       {/if}
     </div>
-    <Statusbar>
-      <button onclick={() => toggle_panel("primary")}>
-        <Icon name="SidebarLeft" />
-      </button>
-      <span class="grow"></span>
-      <button onclick={() => toggle_panel("secondary")}>
-        <Icon name="SidebarRight" />
-      </button>
-    </Statusbar>
+    {#if !app_panels.current?.focus}
+      <Statusbar>
+        <button onclick={() => toggle_panel("primary")}>
+          <Icon name="SidebarLeft" />
+        </button>
+        <span class="grow"></span>
+        <button onclick={() => toggle_panel("secondary")}>
+          <Icon name="SidebarRight" />
+        </button>
+      </Statusbar>
+    {/if}
   {:else}
     <!-- LOADING/VAULT STATE -->
     {#if has_vault.current === false}

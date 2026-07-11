@@ -111,6 +111,37 @@ export const default_commands: CommandType[] = [
       await keymap.reload()
     },
   },
+  { label: "File", type: "group" },
+  {
+    id: "file.save",
+    label: "Save",
+    type: "item",
+    action: explorer.save,
+  },
+  {
+    id: "file.save-all",
+    label: "Save All",
+    type: "item",
+    action: explorer.save_all,
+  },
+  {
+    id: "file.close",
+    label: "Close",
+    type: "item",
+    action: explorer.close,
+  },
+  {
+    id: "file.close-all",
+    label: "Close All",
+    type: "item",
+    action: explorer.close_all,
+  },
+  {
+    id: "file.delete",
+    label: "Delete",
+    type: "item",
+    action: () => explorer.delete(),
+  },
   "divider",
   { label: "Application", type: "group" },
   {
