@@ -13,7 +13,7 @@
 
     for (const file of files.current?.nodes ?? []) {
       if (file.level === 0) {
-        list = file.type === "dir" && file.place === "bottom" ? bottom : top
+        list = file.place === "bottom" ? bottom : top
       }
 
       parents.length = file.level

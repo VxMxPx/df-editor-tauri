@@ -2,6 +2,7 @@ import {
   copyFile,
   exists,
   mkdir,
+  open as open_file,
   readDir,
   readTextFile,
   remove,
@@ -18,6 +19,16 @@ export const copy_file = (source: string, target: string) =>
 export const select_dir = () => open({ directory: true, multiple: false })
 export const read_dir = (path: string) => readDir(path)
 export const read_text = (path: string) => readTextFile(path)
+export async function read_start(path: string, length: number) {
+  const file = await open_file(path, { read: true })
+  try {
+    const bytes = new Uint8Array(length)
+    const read = await file.read(bytes)
+    return new TextDecoder().decode(bytes.subarray(0, read ?? 0))
+  } finally {
+    await file.close()
+  }
+}
 export const remove_path = (path: string) => remove(path, { recursive: true })
 export const write_text = (path: string, contents: string) =>
   writeTextFile(path, contents)

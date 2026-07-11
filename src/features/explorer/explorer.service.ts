@@ -23,6 +23,7 @@ export type ExplorerNode = {
   icon?: IconName
   color?: string
   restrict: ("write" | "rename" | "delete")[]
+  heading?: string
 }
 export type ExplorerState = {
   nodes: ExplorerNode[]
@@ -35,6 +36,7 @@ type DirectoryMetadata = Partial<
     "name" | "place" | "weight" | "icon" | "color" | "restrict"
   >
 >
+type FileHeading = DirectoryMetadata & Pick<ExplorerNode, "heading">
 
 //
 // state
@@ -63,13 +65,14 @@ export async function open(id: string) {
 
   if (node.opened === null) {
     const contents = await fs.read_text(node.path)
+    const buffer = node.heading ? contents.slice(node.heading.length) : contents
     nodes = nodes.map((node) =>
       node.id === id
         ? {
             ...node,
             opened: ++opened,
-            contents,
-            buffer: contents,
+            contents: buffer,
+            buffer,
           }
         : node,
     )
@@ -188,7 +191,7 @@ export async function save(id = focused, buffer?: string) {
     is_dirty: false,
   }
   nodes = nodes.map((node) => (node.id === id ? next : node))
-  await fs.write_text(next.path, next.contents)
+  await fs.write_text(next.path, `${next.heading ?? ""}${next.contents}`)
   push_state()
 }
 
@@ -301,33 +304,55 @@ export async function open_virtual({
 //
 // read nodes from fs
 //
+function parse_metadata(data: unknown): DirectoryMetadata {
+  if (!data || typeof data !== "object" || Array.isArray(data)) return {}
+
+  const metadata = data as Record<string, unknown>
+  const restrict = Array.isArray(metadata.restrict)
+    ? metadata.restrict.filter(
+        (value): value is "write" | "rename" | "delete" =>
+          value === "write" || value === "rename" || value === "delete",
+      )
+    : []
+  return {
+    name: typeof metadata.name === "string" ? metadata.name : undefined,
+    place: metadata.place === "bottom" ? "bottom" : "top",
+    weight:
+      typeof metadata.weight === "number" && Number.isFinite(metadata.weight)
+        ? metadata.weight
+        : null,
+    icon:
+      typeof metadata.icon === "string" && metadata.icon in icons
+        ? (metadata.icon as IconName)
+        : undefined,
+    color: typeof metadata.color === "string" ? metadata.color : undefined,
+    restrict,
+  }
+}
+
 async function read_metadata(path: string): Promise<DirectoryMetadata> {
   try {
-    const data: unknown = JSON.parse(
-      await fs.read_text(await fs.join_path(path, CONST.DIR_META_FILENAME)),
+    return parse_metadata(
+      JSON.parse(
+        await fs.read_text(await fs.join_path(path, CONST.DIR_META_FILENAME)),
+      ),
     )
-    if (!data || typeof data !== "object" || Array.isArray(data)) return {}
+  } catch {
+    return {}
+  }
+}
 
-    const metadata = data as Record<string, unknown>
-    const restrict = Array.isArray(metadata.restrict)
-      ? metadata.restrict.filter(
-          (value): value is "write" | "rename" | "delete" =>
-            value === "write" || value === "rename" || value === "delete",
-        )
-      : []
+async function read_heading(path: string): Promise<FileHeading> {
+  if ((await fs.read_start(path, 4)) !== "---\n") return {}
+
+  try {
+    const contents = await fs.read_text(path)
+    const end = contents.indexOf("\n---", 4)
+    if (end === -1) return {}
+    const length = contents.startsWith("\n---\n", end) ? 5 : 4
     return {
-      name: typeof metadata.name === "string" ? metadata.name : undefined,
-      place: metadata.place === "bottom" ? "bottom" : "top",
-      weight:
-        typeof metadata.weight === "number" && Number.isFinite(metadata.weight)
-          ? metadata.weight
-          : null,
-      icon:
-        typeof metadata.icon === "string" && metadata.icon in icons
-          ? (metadata.icon as IconName)
-          : undefined,
-      color: typeof metadata.color === "string" ? metadata.color : undefined,
-      restrict,
+      ...parse_metadata(JSON.parse(contents.slice(4, end))),
+      heading: contents.slice(0, end + length),
     }
   } catch {
     return {}
@@ -341,9 +366,11 @@ async function read_nodes(path: string, level: number) {
       .filter((entry) => !settings.get("EXPLORER.IGNORED").includes(entry.name))
       .map(async (entry) => {
         const entry_path = await fs.join_path(path, entry.name)
-        const metadata = entry.isDirectory
+        const metadata: FileHeading = entry.isDirectory
           ? await read_metadata(entry_path)
-          : {}
+          : entry.name.endsWith(".md")
+            ? await read_heading(entry_path)
+            : {}
         return {
           id: entry_path,
           name: metadata.name ?? entry.name,
@@ -361,6 +388,7 @@ async function read_nodes(path: string, level: number) {
           icon: metadata.icon,
           color: metadata.color,
           restrict: metadata.restrict ?? [],
+          heading: metadata.heading,
         } satisfies ExplorerNode
       }),
   )
