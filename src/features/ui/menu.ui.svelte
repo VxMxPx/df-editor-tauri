@@ -4,7 +4,13 @@
   import Kbd from "./kbd.ui.svelte"
 
   export type MenuItem =
-    | { label: string; action: () => void; icon?: IconName; kbd?: string[] }
+    | {
+        label: string
+        action: () => void
+        icon?: IconName
+        kbd?: string[]
+        disabled?: boolean
+      }
     | "divider"
     | undefined
   export type MenuPosition = "top" | "bottom" | "left" | "right"
@@ -137,7 +143,9 @@
       <Divider />
     {:else}
       <button
+        disabled={item.disabled}
         onclick={() => {
+          if (item.disabled) return
           item.action()
           close()
         }}
@@ -170,8 +178,11 @@
 
     button {
       @apply flex items-center justify-start gap-2 rounded px-1 py-0.5;
-      &:hover {
+      &:not(:disabled):hover {
         @apply bg-white/25;
+      }
+      &:disabled {
+        @apply cursor-default opacity-40;
       }
     }
   }

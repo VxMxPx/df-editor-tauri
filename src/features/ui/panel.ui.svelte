@@ -8,6 +8,6 @@
 
 <style lang="postcss">
   .ui.panel_ui {
-    @apply min-h-20 min-w-52;
+    @apply flex min-h-20 min-w-52 flex-col;
   }
 </style>

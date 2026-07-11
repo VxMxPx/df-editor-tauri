@@ -1,4 +1,7 @@
 import { bus, fs, settings } from "@df/app"
+import { CONST } from "@root/constants"
+import * as icons from "@df/ui/icons"
+import type { IconName } from "@df/ui"
 
 //
 // types
@@ -14,12 +17,23 @@ export type ExplorerNode = {
   is_dirty: boolean
   contents: string
   buffer: string
+  place: "top" | "bottom"
+  weight: number | null
+  icon?: IconName
+  color?: string
+  restrict: ("write" | "rename" | "delete")[]
 }
 export type ExplorerState = {
   nodes: ExplorerNode[]
   focused: string
   expanded: Set<string>
 }
+type DirectoryMetadata = Partial<
+  Pick<
+    ExplorerNode,
+    "name" | "place" | "weight" | "icon" | "color" | "restrict"
+  >
+>
 
 //
 // state
@@ -183,6 +197,9 @@ export async function create_draft() {
     is_dirty: false,
     contents: "",
     buffer: "",
+    place: "top",
+    weight: null,
+    restrict: [],
   } satisfies ExplorerNode
   const index = parent ? nodes.indexOf(parent) : nodes.length - 1
   nodes.splice(index + 1, 0, node)
@@ -194,22 +211,52 @@ export async function create_draft() {
 //
 // read nodes from fs
 //
+async function read_metadata(path: string): Promise<DirectoryMetadata> {
+  try {
+    const data: unknown = JSON.parse(
+      await fs.read_text(await fs.join_path(path, CONST.DIR_META_FILENAME)),
+    )
+    if (!data || typeof data !== "object" || Array.isArray(data)) return {}
+
+    const metadata = data as Record<string, unknown>
+    const restrict = Array.isArray(metadata.restrict)
+      ? metadata.restrict.filter(
+          (value): value is "write" | "rename" | "delete" =>
+            value === "write" || value === "rename" || value === "delete",
+        )
+      : []
+    return {
+      name: typeof metadata.name === "string" ? metadata.name : undefined,
+      place: metadata.place === "bottom" ? "bottom" : "top",
+      weight:
+        typeof metadata.weight === "number" && Number.isFinite(metadata.weight)
+          ? metadata.weight
+          : null,
+      icon:
+        typeof metadata.icon === "string" && metadata.icon in icons
+          ? (metadata.icon as IconName)
+          : undefined,
+      color: typeof metadata.color === "string" ? metadata.color : undefined,
+      restrict,
+    }
+  } catch {
+    return {}
+  }
+}
+
 async function read_nodes(path: string, level: number) {
   const entries = await fs.read_dir(path)
-  entries.sort(
-    (a, b) =>
-      Number(b.isDirectory) - Number(a.isDirectory) ||
-      a.name.localeCompare(b.name),
-  )
-
-  return Promise.all(
+  const nodes = await Promise.all(
     entries
       .filter((entry) => !settings.get("EXPLORER.IGNORED").includes(entry.name))
       .map(async (entry) => {
         const entry_path = await fs.join_path(path, entry.name)
+        const metadata = entry.isDirectory
+          ? await read_metadata(entry_path)
+          : {}
         return {
           id: entry_path,
-          name: entry.name,
+          name: metadata.name ?? entry.name,
           type: entry.isDirectory ? "dir" : "file",
           path: entry_path,
           level,
@@ -218,8 +265,19 @@ async function read_nodes(path: string, level: number) {
           is_dirty: false,
           contents: "",
           buffer: "",
+          place: metadata.place ?? "top",
+          weight: metadata.weight ?? null,
+          icon: metadata.icon,
+          color: metadata.color,
+          restrict: metadata.restrict ?? [],
         } satisfies ExplorerNode
       }),
+  )
+  return nodes.sort(
+    (a, b) =>
+      Number(b.type === "dir") - Number(a.type === "dir") ||
+      (a.weight ?? 0) - (b.weight ?? 0) ||
+      a.name.localeCompare(b.name),
   )
 }
 
@@ -240,6 +298,8 @@ export async function load(path: string) {
   }
   push_state()
 }
+
+export const reload = () => load(vault_path)
 
 //
 // set focused file state

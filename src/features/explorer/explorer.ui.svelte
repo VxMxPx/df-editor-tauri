@@ -2,8 +2,23 @@
   import { bus } from "@df/app"
   import { explorer, type ExplorerNode } from "."
   import { Titlebar, Icon, Panel, type MenuItem, ui_menu } from "@df/ui"
+  import Divider from "@df/ui/divider.ui.svelte"
 
   const files = bus.bind("explorer::state")
+  const lists = $derived.by(() => {
+    const top: ExplorerNode[] = []
+    const bottom: ExplorerNode[] = []
+    let list = top
+
+    for (const file of files.current?.nodes ?? []) {
+      if (file.level === 0) {
+        list = file.type === "dir" && file.place === "bottom" ? bottom : top
+      }
+      list.push(file)
+    }
+
+    return { top, bottom }
+  })
 
   function handle_click(
     file: ExplorerNode,
@@ -22,6 +37,7 @@
                 label: "New file",
                 action: () => null,
                 icon: "Plus",
+                disabled: file.restrict.includes("write"),
               },
               "divider",
             ]
@@ -30,8 +46,14 @@
           label: "Delete",
           action: () => explorer.delete(file.id),
           icon: "Trash",
+          disabled: file.restrict.includes("delete"),
         },
-        { label: "Rename", action: () => {}, icon: "Pencil" },
+        {
+          label: "Rename",
+          action: () => {},
+          icon: "Pencil",
+          disabled: file.restrict.includes("rename"),
+        },
       ])
       return
     }
@@ -45,37 +67,54 @@
     </button>
   </Titlebar>
   <div class="explorer explorer_ui">
-    {#if files.current}
-      {#each files.current.nodes as file}
-        <button
-          class:dirty={file.is_dirty}
-          class:focused={files.current.focused === file.id}
-          style={`padding-left:${10 * (file.level + 1)}px;`}
-          onmousedown={(event) => handle_click(file, event)}
-        >
-          <Icon
-            size={12}
-            name={file.type === "file"
-              ? "File"
-              : files.current.expanded.has(file.id)
-                ? "FolderOpened"
-                : "Folder"}
-          />
-          <span>{file.name}</span>
-          {#if file.is_dirty}
-            <span class="dirty-marker">•</span>
-          {/if}
-        </button>
+    <div class="top">
+      {#each lists.top as file}
+        {@render explorer_item(file)}
       {/each}
-    {/if}
+    </div>
+    <div class="bottom">
+      {#if lists.bottom.length}
+        <Divider />
+      {/if}
+      {#each lists.bottom as file}
+        {@render explorer_item(file)}
+      {/each}
+    </div>
   </div>
 </Panel>
 
+{#snippet explorer_item(file: ExplorerNode)}
+  <button
+    class:dirty={file.is_dirty}
+    class:focused={files.current?.focused === file.id}
+    style={`padding-left:${10 * (file.level + 1)}px;`}
+    style:background-color={file.color}
+    onmousedown={(event) => handle_click(file, event)}
+  >
+    <Icon
+      size={12}
+      name={file.icon ??
+        (file.type === "file"
+          ? "File"
+          : files.current?.expanded.has(file.id)
+            ? "FolderOpened"
+            : "Folder")}
+    />
+    <span>{file.name}</span>
+    {#if file.is_dirty}
+      <span class="dirty-marker">•</span>
+    {/if}
+  </button>
+{/snippet}
+
 <style lang="postcss">
   .explorer.explorer_ui {
-    @apply flex flex-col select-none;
+    @apply flex h-full flex-col select-none;
+    .top {
+      @apply w-full grow;
+    }
     button {
-      @apply flex flex-row items-center justify-start gap-1.5 px-2.5 py-1;
+      @apply flex w-full flex-row items-center justify-start gap-1.5 px-2.5 py-1;
       &:hover,
       &.focused {
         @apply bg-white/25;
