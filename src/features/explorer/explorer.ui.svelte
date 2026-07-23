@@ -116,9 +116,9 @@
 
 <style lang="postcss">
   .explorer.explorer_ui {
-    @apply flex h-full w-55 flex-col select-none;
+    @apply flex h-full min-h-0 w-55 flex-col overflow-hidden select-none;
     .top {
-      @apply w-full grow;
+      @apply min-h-0 w-full grow overflow-y-auto;
     }
     button {
       @apply flex w-full flex-row items-center justify-start gap-1.5 overflow-hidden px-2.5 py-1 whitespace-nowrap;
