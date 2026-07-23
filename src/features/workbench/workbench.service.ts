@@ -1,4 +1,5 @@
 import { bus } from "@df/app"
+import type { Component } from "svelte"
 
 export type Document = {
   id: string
@@ -20,6 +21,7 @@ export type DocumentHandler = {
   focus?: (document: Document) => void
   save?: (document: Document) => Promise<void> | void
   close?: (document: Document) => void
+  titlebar_controls?: Component
 }
 
 const handlers: DocumentHandler[] = []
@@ -30,6 +32,8 @@ let opened = 0
 const push_state = () => bus.signal("workbench::state", { documents, focused })
 
 export const register = (handler: DocumentHandler) => handlers.push(handler)
+export const handler = (id: string) =>
+  handlers.find((handler) => handler.id === id)
 
 export async function open({
   path,

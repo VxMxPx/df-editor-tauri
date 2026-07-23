@@ -31,7 +31,7 @@
   onmousedown={start_drag}
 >
   <span>{title}</span>
-  <div class="flex gap-2">
+  <div class="flex gap-4 items-center">
     {@render children?.()}
   </div>
 </header>

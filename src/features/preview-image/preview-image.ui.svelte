@@ -1,17 +1,17 @@
 <script lang="ts">
   import { onMount } from "svelte"
   import { bus } from "@df/app"
-  import { preview_pdf } from "."
+  import { preview_image } from "."
 
   let preview_element: HTMLDivElement
   let canvas_element = $state<HTMLCanvasElement>()
-  const preview = bus.bind("preview-pdf::state")
+  const preview = bus.bind("preview-image::state")
 
   function render() {
     const canvas = canvas_element
     if (!canvas || !preview_element) return
     const { width, height } = preview_element.getBoundingClientRect()
-    void preview_pdf.render(canvas, width, height)
+    preview_image.render(canvas, width, height)
   }
 
   $effect(() => {
@@ -26,7 +26,7 @@
   })
 </script>
 
-<div class="preview_pdf preview_pdf_ui" bind:this={preview_element}>
+<div class="preview_image preview_ui" bind:this={preview_element}>
   {#if preview.current?.error}
     <span>{preview.current.error}</span>
   {:else}
@@ -35,8 +35,8 @@
 </div>
 
 <style lang="postcss">
-  .preview_pdf.preview_pdf_ui {
-    @apply relative flex min-h-0 flex-1 items-center justify-center;
+  .preview_image.preview_ui {
+    @apply flex min-h-0 flex-1 items-center justify-center;
     canvas {
       @apply h-full w-full;
     }

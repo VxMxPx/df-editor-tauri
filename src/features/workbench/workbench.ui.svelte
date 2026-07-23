@@ -11,6 +11,11 @@
   const current = $derived(
     files.current?.documents.find((file) => file.id === files.current?.focused),
   )
+  const TitlebarControls = $derived(
+    current
+      ? workbench.handler(current.handler_id)?.titlebar_controls
+      : undefined,
+  )
 
   function documents_menu(
     event: MouseEvent & { currentTarget: EventTarget & HTMLButtonElement },
@@ -54,6 +59,9 @@
     title={(current?.name ?? "Start typing to create a new file...") +
       (current?.is_dirty ? " •" : "")}
   >
+    {#if TitlebarControls}
+      <TitlebarControls />
+    {/if}
     <button onclick={toggle_focus}><Icon name="Maximize" /></button>
     <button
       disabled={!files.current?.documents.length}
@@ -79,5 +87,8 @@
     @apply flex min-h-0 min-w-0 flex-1 flex-col overflow-hidden rounded-b-sm!;
     background: #f9f4ef;
     box-shadow: 0px 0px 8px rgba(0, 0, 0, 0.4);
+  }
+  .workbench.workbench_ui :global(button) {
+    /*display: block;*/
   }
 </style>
