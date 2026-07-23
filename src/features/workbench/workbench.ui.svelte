@@ -1,7 +1,8 @@
 <script lang="ts">
   import { bus } from "@df/app"
   import { EditorUi } from "@df/editor"
-  import { PreviewUi } from "@df/preview"
+  import { PreviewImageUi } from "@df/preview-image"
+  import { PreviewPdfUi } from "@df/preview-pdf"
   import { Icon, Titlebar, ui_menu } from "@df/ui"
   import * as workbench from "./workbench.service"
 
@@ -64,8 +65,10 @@
       <Icon name="Menu" />
     </button>
   </Titlebar>
-  {#if current?.handler_id === "preview"}
-    <PreviewUi />
+  {#if current?.handler_id === "preview-image"}
+    <PreviewImageUi />
+  {:else if current?.handler_id === "preview-pdf"}
+    <PreviewPdfUi />
   {:else}
     <EditorUi />
   {/if}

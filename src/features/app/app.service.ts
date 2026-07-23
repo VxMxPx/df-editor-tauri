@@ -2,7 +2,8 @@ import { mount } from "svelte"
 import AppUI from "./app.ui.svelte"
 import { editor } from "@df/editor"
 import { explorer } from "@df/explorer"
-import { preview } from "@df/preview"
+import { preview_image } from "@df/preview-image"
+import { preview_pdf } from "@df/preview-pdf"
 import { vault } from "@df/vault"
 import { bus, keymap, log, settings } from "."
 
@@ -39,7 +40,8 @@ export async function init() {
     //
     //
     await editor.init()
-    preview.init()
+    preview_image.init()
+    preview_pdf.init()
 
     is_init_done = true
     bus.signal("app::init_done")
