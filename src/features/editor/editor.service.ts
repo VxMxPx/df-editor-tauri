@@ -105,7 +105,7 @@ export async function init() {
   }
   workbench.register({
     id: "editor",
-    can_open: (path) => /\.(md|cfg|json)$/i.test(path),
+    can_open: (path) => /\.(md|cfg|txt|json)$/i.test(path),
     open,
     save,
     close: (document) => buffers.delete(document.id),
