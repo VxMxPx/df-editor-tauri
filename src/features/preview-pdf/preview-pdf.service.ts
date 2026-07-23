@@ -1,7 +1,8 @@
 import { GlobalWorkerOptions, getDocument } from "pdfjs-dist"
 import worker_url from "pdfjs-dist/build/pdf.worker.mjs?url"
 import type { PDFDocumentLoadingTask, PDFDocumentProxy } from "pdfjs-dist"
-import { bus, fs } from "@df/app"
+import { convertFileSrc } from "@tauri-apps/api/core"
+import { bus } from "@df/app"
 import { workbench, type Document } from "@df/workbench"
 import PreviewPdfControlsUi from "./preview-pdf-controls.ui.svelte"
 
@@ -12,6 +13,8 @@ export type PreviewPdfState = {
   page_number: number
   page_count: number
   error: string
+  is_loading: boolean
+  is_rendering: boolean
 }
 
 let document_id = ""
@@ -21,6 +24,8 @@ let loading_task: PDFDocumentLoadingTask | undefined
 let page_number = 1
 let page_count = 0
 let error = ""
+let is_loading = false
+let is_rendering = false
 let render_id = 0
 let cancel_render: (() => void) | undefined
 
@@ -30,6 +35,8 @@ const push_state = () =>
     page_number,
     page_count,
     error,
+    is_loading,
+    is_rendering,
   })
 
 function clear_canvas(canvas?: HTMLCanvasElement) {
@@ -51,23 +58,30 @@ async function load(document: Document) {
   page_number = 1
   page_count = 0
   error = ""
+  is_loading = true
+  is_rendering = false
   push_state()
   await previous_task?.destroy()
   if (id !== render_id) return
 
   try {
-    const data = await fs.read_binary(path)
-    const task = getDocument({ data })
+    const task = getDocument({
+      url: convertFileSrc(path),
+      disableRange: false,
+      disableStream: false,
+    })
     loading_task = task
     const next_pdf = await task.promise
     if (id !== render_id) return void task.destroy()
     pdf = next_pdf
     page_count = next_pdf.numPages
+    is_loading = false
     push_state()
   } catch {
     if (id !== render_id) return
     loading_task = undefined
     error = "Unable to load PDF"
+    is_loading = false
     push_state()
   }
 }
@@ -84,6 +98,8 @@ function close(document: Document) {
   page_number = 1
   page_count = 0
   error = ""
+  is_loading = false
+  is_rendering = false
   push_state()
 }
 
@@ -101,6 +117,8 @@ export async function render(
 
   const id = ++render_id
   clear_canvas(canvas)
+  is_rendering = true
+  push_state()
   let is_context_saved = false
   try {
     const page = await pdf.getPage(page_number)
@@ -131,7 +149,11 @@ export async function render(
     push_state()
   } finally {
     if (is_context_saved) context.restore()
-    if (id === render_id) cancel_render = undefined
+    if (id === render_id) {
+      cancel_render = undefined
+      is_rendering = false
+      push_state()
+    }
   }
 }
 
