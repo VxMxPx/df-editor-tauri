@@ -4,6 +4,7 @@ import {
   mkdir,
   open as open_file,
   readDir,
+  readFile,
   readTextFile,
   remove,
   writeTextFile,
@@ -19,6 +20,7 @@ export const copy_file = (source: string, target: string) =>
 export const select_dir = () => open({ directory: true, multiple: false })
 export const read_dir = (path: string) => readDir(path)
 export const read_text = (path: string) => readTextFile(path)
+export const read_binary = (path: string) => readFile(path)
 export async function read_start(path: string, length: number) {
   const file = await open_file(path, { read: true })
   try {
