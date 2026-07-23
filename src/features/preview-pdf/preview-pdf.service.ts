@@ -158,14 +158,16 @@ export async function render(
 }
 
 export function previous_page() {
-  if (page_number === 1) return
-  page_number--
-  push_state()
+  go_to_page(page_number - 1)
 }
 
 export function next_page() {
-  if (page_number === page_count) return
-  page_number++
+  go_to_page(page_number + 1)
+}
+
+export function go_to_page(next: number) {
+  if (next < 1 || next > page_count || next === page_number) return
+  page_number = next
   push_state()
 }
 

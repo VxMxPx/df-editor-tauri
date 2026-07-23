@@ -48,7 +48,7 @@
       @apply h-full w-full;
     }
     .loader {
-      @apply absolute;
+      @apply absolute text-black;
     }
   }
 </style>
