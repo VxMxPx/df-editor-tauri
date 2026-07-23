@@ -1,10 +1,12 @@
 <script lang="ts">
   import { bus } from "@df/app"
+  import { workbench } from "@df/workbench"
   import { explorer, type ExplorerNode } from "."
   import { Titlebar, Icon, Panel, type MenuItem, ui_menu } from "@df/ui"
   import Divider from "@df/ui/divider.ui.svelte"
 
   const files = bus.bind("explorer::state")
+  const documents = bus.bind("workbench::state")
   const lists = $derived.by(() => {
     const top: ExplorerNode[] = []
     const bottom: ExplorerNode[] = []
@@ -93,8 +95,7 @@
 
 {#snippet explorer_item(file: ExplorerNode)}
   <button
-    class:dirty={file.is_dirty}
-    class:focused={files.current?.focused === file.id}
+    class:focused={documents.current?.focused === file.id}
     style={`padding-left:${10 * (file.level + 1)}px;`}
     style:background-color={file.color}
     onmousedown={(event) => handle_click(file, event)}
@@ -110,9 +111,6 @@
             : "Folder")}
     />
     <span class="label">{file.name}</span>
-    {#if file.is_dirty}
-      <span class="dirty-marker">•</span>
-    {/if}
   </button>
 {/snippet}
 
@@ -130,9 +128,6 @@
       &:hover,
       &.focused {
         @apply bg-white/25;
-      }
-      .dirty-marker {
-        @apply ml-auto shrink-0;
       }
     }
   }

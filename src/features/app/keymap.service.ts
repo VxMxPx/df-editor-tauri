@@ -1,13 +1,14 @@
 import default_keymap from "./data/default.keymap.cfg?raw"
 import { command, default_commands } from "@df/command"
 import { explorer } from "@df/explorer"
+import { workbench } from "@df/workbench"
 import * as bus from "./bus.service"
 import * as cfg from "./lib/cfg"
 import * as fs from "./lib/fs"
 
 const actions: Record<string, () => void> = {
-  SAVE: explorer.save,
-  CLOSE: explorer.close,
+  SAVE: workbench.save,
+  CLOSE: workbench.close,
   COMMAND: () => command(default_commands),
 }
 
@@ -31,7 +32,10 @@ function handle(event: KeyboardEvent) {
   if (event.metaKey && /^[1-9]$/.test(event.key)) {
     event.preventDefault()
     event.stopPropagation()
-    explorer.focus_opened(Number(event.key))
+    const document = workbench
+      .state()
+      .documents.find((document) => document.opened === Number(event.key))
+    if (document) workbench.focus(document.id)
     return
   }
 

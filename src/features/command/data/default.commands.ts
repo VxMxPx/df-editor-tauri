@@ -2,6 +2,7 @@ import { invoke } from "@tauri-apps/api/core"
 import { getCurrentWindow } from "@tauri-apps/api/window"
 import { fs, keymap, settings } from "@df/app"
 import { explorer } from "@df/explorer"
+import { workbench } from "@df/workbench"
 import { vault } from "@df/vault"
 import type { CommandType } from "../command.service"
 
@@ -30,13 +31,12 @@ export const default_commands: CommandType[] = [
     label: "Drop Explorer State",
     type: "item",
     action: () =>
-      explorer.open_virtual({
+      workbench.open({
         id: "dev:explorer-state",
         name: "explorer-state.json",
         path: "explorer-state.json",
         contents: JSON.stringify(explorer.state(), null, 2),
         readonly: true,
-        replace: true,
       }),
   },
   {
@@ -51,7 +51,7 @@ export const default_commands: CommandType[] = [
     label: "Open Default Settings",
     type: "item",
     action: () =>
-      explorer.open_virtual({
+      workbench.open({
         id: "settings:default",
         name: "default.config.cfg",
         path: "default.config.cfg",
@@ -64,7 +64,7 @@ export const default_commands: CommandType[] = [
     label: "Open Default Keymap",
     type: "item",
     action: () =>
-      explorer.open_virtual({
+      workbench.open({
         id: "keymap:default",
         name: "default.keymap.cfg",
         path: "default.keymap.cfg",
@@ -79,7 +79,7 @@ export const default_commands: CommandType[] = [
     action: async () => {
       const path = await settings.path()
       if (await fs.path_exists(path)) return explorer.open_path(path)
-      explorer.open_virtual({
+      workbench.open({
         id: path,
         name: "settings.cfg",
         path,
@@ -94,7 +94,7 @@ export const default_commands: CommandType[] = [
     action: async () => {
       const path = await keymap.path()
       if (await fs.path_exists(path)) return explorer.open_path(path)
-      explorer.open_virtual({
+      workbench.open({
         id: path,
         name: "keymap.cfg",
         path,
@@ -116,31 +116,34 @@ export const default_commands: CommandType[] = [
     id: "file.save",
     label: "Save",
     type: "item",
-    action: explorer.save,
+    action: workbench.save,
   },
   {
     id: "file.save-all",
     label: "Save All",
     type: "item",
-    action: explorer.save_all,
+    action: workbench.save_all,
   },
   {
     id: "file.close",
     label: "Close",
     type: "item",
-    action: explorer.close,
+    action: workbench.close,
   },
   {
     id: "file.close-all",
     label: "Close All",
     type: "item",
-    action: explorer.close_all,
+    action: workbench.close_all,
   },
   {
     id: "file.delete",
     label: "Delete",
     type: "item",
-    action: () => explorer.delete(),
+    action: () => {
+      const id = workbench.state().focused
+      if (id) void explorer.delete(id)
+    },
   },
   "divider",
   { label: "Application", type: "group" },

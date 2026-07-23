@@ -1,5 +1,5 @@
 <script lang="ts">
-  import { EditorUi } from "@df/editor"
+  import { WorkbenchUi } from "@df/workbench"
   import { invoke } from "@tauri-apps/api/core"
   import { Divider, Icon, Panel, Statusbar } from "@df/ui"
   import { bus } from "@df/app"
@@ -30,7 +30,7 @@
         <ExplorerUi />
       {/if}
       <div class="flex min-h-0 min-w-0 flex-1 flex-col">
-        <EditorUi />
+        <WorkbenchUi />
       </div>
       {#if app_panels.current?.secondary && !app_panels.current.focus}
         <Panel>Secondary panel...</Panel>

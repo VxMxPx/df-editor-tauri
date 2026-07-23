@@ -4,16 +4,13 @@ import css_worker from "monaco-editor/esm/vs/language/css/css.worker?worker"
 import html_worker from "monaco-editor/esm/vs/language/html/html.worker?worker"
 import json_worker from "monaco-editor/esm/vs/language/json/json.worker?worker"
 import typescript_worker from "monaco-editor/esm/vs/language/typescript/ts.worker?worker"
-import { bus } from "@df/app"
+import { bus, fs } from "@df/app"
 import { css_var } from "@df/app/lib/css"
-import { explorer } from "@df/explorer"
-import type { ExplorerState } from "@df/explorer/explorer.service"
+import { workbench, type Document } from "@df/workbench"
 
 let monaco_instance: monaco.editor.IStandaloneCodeEditor
-let explorer_state: ExplorerState | undefined
-let opened_id = ""
 let is_syncing = false
-let is_creating_draft = false
+const buffers = new Map<string, { contents: string; buffer: string }>()
 
 export const create_instance = (container: HTMLElement) => {
   monaco_instance = monaco.editor.create(container, {
@@ -35,95 +32,82 @@ export const create_instance = (container: HTMLElement) => {
     wrappingIndent: "none",
     wrappingStrategy: "advanced",
     renderLineHighlight: "none",
-    padding: {
-      top: 10,
-      bottom: 10,
-    },
+    padding: { top: 10, bottom: 10 },
     tabSize: 2,
     contextmenu: false,
   })
-
-  const off = bus.on("explorer::state", sync)
+  const off = bus.on("workbench::state", sync)
   monaco_instance.onDidChangeModelContent(update_buffer)
+  sync(workbench.state())
   monaco_instance.onDidDispose(off)
   return monaco_instance
 }
 
-function sync(state: ExplorerState) {
-  explorer_state = state
+async function open(document: Document) {
+  const source = document.contents ?? (await fs.read_text(document.path))
+  const contents = document.heading
+    ? source.slice(document.heading.length)
+    : source
+  buffers.set(document.id, { contents, buffer: contents })
+}
 
-  const file = state.nodes.find(
-    (node) => node.id === state.focused && node.opened !== null,
+function sync(state: ReturnType<typeof workbench.state>) {
+  const document = state.documents.find(
+    (document) => document.id === state.focused,
   )
-  const next_id = file?.id ?? ""
-  monaco_instance.updateOptions({ readOnly: file?.is_readonly ?? false })
-  if (next_id === opened_id) return
-
-  if (is_creating_draft) {
-    opened_id = next_id
-    return
-  }
-
+  if (!document || document.handler_id !== "editor" || !monaco_instance) return
+  const buffer = buffers.get(document.id)
+  if (!buffer) return
   is_syncing = true
-  opened_id = next_id
-  monaco_instance.setValue(file?.buffer ?? "")
+  monaco_instance.updateOptions({ readOnly: document.is_readonly })
+  monaco_instance.setValue(buffer.buffer)
   queueMicrotask(() => (is_syncing = false))
 }
 
-async function update_buffer() {
+function update_buffer() {
   if (is_syncing) return
-
-  const file = current_file()
-  if (!file) {
-    if (is_creating_draft) return
-    is_creating_draft = true
-    let draft: string | undefined
-    try {
-      draft = await explorer.create_draft()
-    } finally {
-      is_creating_draft = false
-    }
-    if (draft) update_buffer()
-    return
-  }
-
-  if (file.is_readonly) return
-
-  explorer.set_buffer(file.id, monaco_instance.getValue())
-}
-
-function current_file() {
-  return explorer_state?.nodes.find(
-    (node) => node.id === explorer_state?.focused && node.opened !== null,
+  const state = workbench.state()
+  const document = state.documents.find(
+    (document) => document.id === state.focused,
   )
+  if (!document || document.handler_id !== "editor" || document.is_readonly)
+    return
+  const buffer = buffers.get(document.id)
+  if (!buffer) return
+  buffer.buffer = monaco_instance.getValue()
+  workbench.set_dirty(document.id, buffer.buffer !== buffer.contents)
 }
 
-export async function save() {
-  const file = current_file()
-  if (!file) return
-  await explorer.save(file.id, monaco_instance.getValue())
-}
-
-export function close() {
-  const file = current_file()
-  if (!file) return
-  explorer.close(file.id)
+async function save(document: Document) {
+  if (document.is_readonly) return
+  const buffer = buffers.get(document.id)
+  if (!buffer || buffer.buffer === buffer.contents) return
+  await fs.write_text(
+    document.path,
+    `${document.heading ?? ""}${buffer.buffer}`,
+  )
+  buffer.contents = buffer.buffer
+  workbench.set_dirty(document.id, false)
 }
 
 export async function init() {
   globalThis.MonacoEnvironment = {
     getWorker(_module_id, label) {
       if (label === "json") return new json_worker()
-      if (label === "css" || label === "scss" || label === "less") {
+      if (label === "css" || label === "scss" || label === "less")
         return new css_worker()
-      }
-      if (label === "html" || label === "handlebars" || label === "razor") {
+      if (label === "html" || label === "handlebars" || label === "razor")
         return new html_worker()
-      }
-      if (label === "typescript" || label === "javascript") {
+      if (label === "typescript" || label === "javascript")
         return new typescript_worker()
-      }
       return new editor_worker()
     },
   }
+  workbench.register({
+    id: "editor",
+    can_open: (path) => /\.(md|cfg|json)$/i.test(path),
+    open,
+    save,
+    close: (document) => buffers.delete(document.id),
+  })
 }
